@@ -76,6 +76,7 @@ import one.mixin.android.vo.TopAsset
 import one.mixin.android.vo.Trace
 import one.mixin.android.vo.TranscriptMessage
 import one.mixin.android.vo.User
+import timber.log.Timber
 
 @Database(
     entities = [
@@ -161,8 +162,11 @@ abstract class MixinDatabase : RoomDatabase() {
                                 FrameworkSQLiteOpenHelperFactory(),
                                 listOf(object : MixinCorruptionCallback {
                                     override fun onCorruption(database: SupportSQLiteDatabase) {
-                                        val e = IllegalStateException("Mixin database is corrupted, current DB version: $CURRENT_VERSION")
-                                        reportException(e)
+                                        // val e = IllegalStateException("Mixin database is corrupted, current DB version: $CURRENT_VERSION")
+                                        // reportException(e)
+
+                                        Timber.e("Mixin database is corrupted")
+                                        MixinApplication.get().gotoRepair()
                                     }
                                 })
                             )
@@ -218,6 +222,7 @@ abstract class MixinDatabase : RoomDatabase() {
 
         private val CALLBACK = object : RoomDatabase.Callback() {
             override fun onCreate(db: SupportSQLiteDatabase) {
+                Timber.e("@@@ room onCreate")
                 super.onCreate(db)
                 db.execSQL(
                     "CREATE TRIGGER IF NOT EXISTS conversation_last_message_update AFTER INSERT ON messages BEGIN UPDATE conversations SET last_message_id = new.id, last_message_created_at = new.created_at WHERE conversation_id = new.conversation_id; END"
@@ -228,6 +233,7 @@ abstract class MixinDatabase : RoomDatabase() {
             }
 
             override fun onOpen(db: SupportSQLiteDatabase) {
+                Timber.e("@@@ room onOpen")
                 super.onOpen(db)
                 supportSQLiteDatabase = db
                 db.execSQL(

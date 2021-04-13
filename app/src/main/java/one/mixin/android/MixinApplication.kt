@@ -4,6 +4,7 @@ import android.app.Activity
 import android.app.Application
 import android.content.Context
 import android.content.MutableContextWrapper
+import android.content.Intent
 import android.os.Bundle
 import android.webkit.CookieManager
 import android.webkit.WebStorage
@@ -11,6 +12,7 @@ import androidx.camera.camera2.Camera2Config
 import androidx.camera.core.CameraXConfig
 import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration
+import androidx.work.WorkManager
 import com.microsoft.appcenter.AppCenter
 import com.microsoft.appcenter.analytics.Analytics
 import com.microsoft.appcenter.crashes.Crashes
@@ -45,6 +47,7 @@ import one.mixin.android.ui.media.pager.MediaPagerActivity
 import one.mixin.android.ui.player.FloatingPlayer
 import one.mixin.android.ui.player.MusicActivity
 import one.mixin.android.ui.player.isMusicServiceRunning
+import one.mixin.android.ui.repair.RepairActivity
 import one.mixin.android.ui.web.FloatingWebClip
 import one.mixin.android.ui.web.WebActivity
 import one.mixin.android.ui.web.refresh
@@ -154,6 +157,20 @@ open class MixinApplication :
     override fun getCameraXConfig() = Camera2Config.defaultConfig()
 
     var onlining = AtomicBoolean(false)
+
+    fun gotoRepair() {
+        if (onlining.compareAndSet(true, false)) {
+            val jobManager = getJobManager()
+            jobManager.cancelAllJob()
+            jobManager.clear()
+            WorkManager.getInstance(this).cancelAllWork()
+            BlazeMessageService.stopService(this)
+            notificationManager.cancelAll()
+            startActivity(Intent(this, RepairActivity::class.java).apply {
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            })
+        }
+    }
 
     fun gotoTimeWrong(serverTime: Long) {
         if (onlining.compareAndSet(true, false)) {

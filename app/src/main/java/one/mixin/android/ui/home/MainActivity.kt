@@ -139,6 +139,7 @@ import one.mixin.android.vo.isGroupConversation
 import one.mixin.android.widget.MaterialSearchView
 import one.mixin.android.worker.RefreshContactWorker
 import one.mixin.android.worker.RefreshFcmWorker
+import timber.log.Timber
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -355,6 +356,7 @@ class MainActivity : BlazeBaseActivity() {
         val currentVersion = try {
             DBUtil.readVersion(getDatabasePath(DB_NAME))
         } catch (e: Exception) {
+            Timber.e(e)
             0
         }
         if (currentVersion > MINI_VERSION && CURRENT_VERSION != currentVersion) {
@@ -913,6 +915,7 @@ class MainActivity : BlazeBaseActivity() {
             activity.startActivity(intent)
         }
 
+        @JvmStatic
         fun show(context: Context) {
             Intent(context, MainActivity::class.java).apply {
                 addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK)

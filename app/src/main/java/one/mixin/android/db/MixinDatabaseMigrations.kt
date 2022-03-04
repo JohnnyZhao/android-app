@@ -305,6 +305,12 @@ class MixinDatabaseMigrations private constructor() {
             }
         }
 
+        val MIGRATION_43_42: Migration = object : Migration(43, 42) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                database.execSQL("DROP TABLE IF  EXISTS `remote_messages_status`")
+            }
+        }
+
         // If you add a new table, be sure to add a clear method to the DatabaseUtil
     }
 }

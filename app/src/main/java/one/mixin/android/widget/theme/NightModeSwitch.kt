@@ -15,6 +15,7 @@ import one.mixin.android.Constants
 import one.mixin.android.R
 import one.mixin.android.databinding.NightModeButtonLayoutBinding
 import one.mixin.android.extension.dp
+import timber.log.Timber
 
 class NightModeSwitch : RelativeLayout {
     companion object {
@@ -46,6 +47,7 @@ class NightModeSwitch : RelativeLayout {
 
     @SuppressLint("UseCompatLoadingForDrawables")
     fun initState(state: Int) {
+        Timber.e("initState $state")
         this.state = state
         when (state) {
             Constants.Theme.THEME_LIGHT_ID -> {
@@ -68,6 +70,7 @@ class NightModeSwitch : RelativeLayout {
 
     @SuppressLint("ClickableViewAccessibility")
     private fun init() {
+        Timber.e("init $androidQ")
         switchRL.layoutParams.width = if (androidQ) {
             (111).dp
         } else {

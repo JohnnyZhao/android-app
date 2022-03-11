@@ -8,6 +8,7 @@ import android.view.Window
 import android.view.WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS
 import android.view.WindowManager.LayoutParams.FLAG_TRANSLUCENT_NAVIGATION
 import android.view.WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS
+import androidx.core.view.ViewCompat
 import one.mixin.android.extension.supportsPie
 
 @SuppressLint("InlinedApi")
@@ -72,13 +73,22 @@ object SystemUIManager {
         window.decorView.systemUiVisibility = flag
     }
 
-    fun lightUI(window: Window, light: Boolean) {
-        if (light) {
-            window.decorView.systemUiVisibility =
-                window.decorView.systemUiVisibility or View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR or View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR
+    fun lightUI(window: Window, lightIcon: Boolean) {
+        val controller = ViewCompat.getWindowInsetsController(window.decorView)
+        if (controller != null) {
+            controller.apply {
+                isAppearanceLightStatusBars = lightIcon
+                isAppearanceLightNavigationBars = lightIcon
+            }
         } else {
-            window.decorView.systemUiVisibility =
-                window.decorView.systemUiVisibility xor View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR xor View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR
+            // Can only be executed once and cannot be used as a switch
+            if (lightIcon) {
+                window.decorView.systemUiVisibility =
+                    window.decorView.systemUiVisibility or View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR or View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR
+            } else {
+                window.decorView.systemUiVisibility =
+                    window.decorView.systemUiVisibility xor View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR xor View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR
+            }
         }
     }
 

@@ -24,6 +24,7 @@ import one.mixin.android.vo.Fiats
 import one.mixin.android.widget.theme.Coordinate
 import one.mixin.android.widget.theme.NightModeSwitch.Companion.ANIM_DURATION
 import one.mixin.android.widget.theme.ThemeActivity
+import timber.log.Timber
 import java.util.Locale
 
 @AndroidEntryPoint
@@ -41,6 +42,23 @@ class AppearanceFragment : BaseFragment(R.layout.fragment_appearance) {
     }
 
     private val binding by viewBinding(FragmentAppearanceBinding::bind)
+    private val androidQ = Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q
+    private val androidS = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
+    private val systemNightMode by lazy {
+        MixinApplication.appContext.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK == Configuration.UI_MODE_NIGHT_YES
+    }
+    private val localNightModeState by lazy {
+        defaultSharedPreferences.getInt(
+            Constants.Theme.THEME_CURRENT_ID,
+            if (!androidQ) {
+                Constants.Theme.THEME_LIGHT_ID
+            } else {
+                Constants.Theme.THEME_AUTO_ID
+            }
+        )
+    }
+    private var lastNightModeState: Int? = null
+    private var switchTask: (() -> Unit)? = null
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -52,58 +70,48 @@ class AppearanceFragment : BaseFragment(R.layout.fragment_appearance) {
                 nightModeSwitch.switch()
             }
             nightModeTv.setText(R.string.setting_theme)
-            nightModeSwitch.initState(
-                defaultSharedPreferences.getInt(
-                    Constants.Theme.THEME_CURRENT_ID,
-                    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
-                        Constants.Theme.THEME_LIGHT_ID
-                    } else {
-                        Constants.Theme.THEME_AUTO_ID
-                    }
-                )
-            )
+            nightModeSwitch.initState(localNightModeState)
             nightModeSwitch.setOnSwitchListener { state ->
-                if (!isAdded) return@setOnSwitchListener
-                val currentId = defaultSharedPreferences.getInt(
-                    Constants.Theme.THEME_CURRENT_ID,
-                    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
-                        Constants.Theme.THEME_LIGHT_ID
-                    } else {
-                        Constants.Theme.THEME_AUTO_ID
-                    }
-                )
-                if (currentId == state) return@setOnSwitchListener
-
-                val currentNightMode = if (currentId == Constants.Theme.THEME_AUTO_ID) {
-                    resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK == Configuration.UI_MODE_NIGHT_YES
-                } else currentId == Constants.Theme.THEME_NIGHT_ID
-
+                if (lastNightModeState == null) lastNightModeState = localNightModeState
+                if (!isAdded || state == lastNightModeState) return@setOnSwitchListener
+                Timber.e("$state $lastNightModeState")
+                val currentNightMode = if (lastNightModeState == Constants.Theme.THEME_AUTO_ID) {
+                    systemNightMode
+                } else lastNightModeState == Constants.Theme.THEME_NIGHT_ID
+                lastNightModeState = state
                 val targetNightMode = if (state == Constants.Theme.THEME_AUTO_ID) {
-                    MixinApplication.appContext.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK == Configuration.UI_MODE_NIGHT_YES
+                    systemNightMode
                 } else state == Constants.Theme.THEME_NIGHT_ID
-                if (currentNightMode != targetNightMode) {
-                    (requireActivity() as ThemeActivity).run {
-                        changeTheme(
-                            getViewCoordinates(nightModeSwitch),
-                            ANIM_DURATION,
-                            !targetNightMode
-                        ) {
-                            AppCompatDelegate.setDefaultNightMode(
-                                when (state) {
-                                    Constants.Theme.THEME_LIGHT_ID -> AppCompatDelegate.MODE_NIGHT_NO
-                                    Constants.Theme.THEME_NIGHT_ID -> AppCompatDelegate.MODE_NIGHT_YES
-                                    Constants.Theme.THEME_AUTO_ID -> AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
-                                    else -> AppCompatDelegate.MODE_NIGHT_NO
-                                }
-                            )
-                            defaultSharedPreferences.putInt(Constants.Theme.THEME_CURRENT_ID, state)
-                            if(Build.VERSION.SDK_INT <= Build.VERSION_CODES.S) {
-                                requireActivity().recreate()
+                Timber.e("targetNightMode:$targetNightMode currentNightMode:${currentNightMode}")
+                switchTask = if (lastNightModeState != localNightModeState) {
+                    {
+                        Timber.e("switchTask")
+                        AppCompatDelegate.setDefaultNightMode(
+                            when (state) {
+                                Constants.Theme.THEME_LIGHT_ID -> AppCompatDelegate.MODE_NIGHT_NO
+                                Constants.Theme.THEME_NIGHT_ID -> AppCompatDelegate.MODE_NIGHT_YES
+                                Constants.Theme.THEME_AUTO_ID -> AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
+                                else -> AppCompatDelegate.MODE_NIGHT_NO
                             }
+                        )
+                        defaultSharedPreferences.putInt(Constants.Theme.THEME_CURRENT_ID, state)
+                        requireActivity().recreate()
+                    }
+                } else {
+                    null
+                }
+                (requireActivity() as ThemeActivity).run {
+                    changeTheme(
+                        getViewCoordinates(nightModeSwitch),
+                        ANIM_DURATION,
+                        !targetNightMode
+                    ) {
+                        if (androidS) {
+                            switchTask?.invoke()
                         }
                     }
-                    syncTheme(targetNightMode)
                 }
+                syncTheme(targetNightMode)
             }
             val language = Lingver.getInstance().getLanguage()
             val languageNames = resources.getStringArray(R.array.language_names)
@@ -147,6 +155,13 @@ class AppearanceFragment : BaseFragment(R.layout.fragment_appearance) {
         }
     }
 
+    override fun onDestroy() {
+        if (!androidS) {
+            switchTask?.invoke()
+        }
+        super.onDestroy()
+    }
+
     private fun syncTheme(isNight: Boolean) {
         binding.apply {
             val bgWindow = if (isNight) {
@@ -187,6 +202,7 @@ class AppearanceFragment : BaseFragment(R.layout.fragment_appearance) {
             currencyTv.textColorResource = textPrimary
             currentTv.textColorResource = textMinor
 
+            Timber.e("isNight $isNight")
             val window = requireActivity().window
             SystemUIManager.lightUI(window, !isNight)
             SystemUIManager.setSystemUiColor(window, requireContext().getColor(bgColor))

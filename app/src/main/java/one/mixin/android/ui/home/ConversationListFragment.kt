@@ -645,6 +645,7 @@ class ConversationListFragment : LinkFragment() {
                 binding.nameTv.text = it
             }
             binding.groupNameTv.visibility = GONE
+            binding.msgExpire.isVisible = conversationItem.isExpire()
             binding.mentionFlag.isVisible =
                 conversationItem.mentionCount != null && conversationItem.mentionCount > 0
             when {

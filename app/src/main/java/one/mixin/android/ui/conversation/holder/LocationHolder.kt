@@ -279,7 +279,8 @@ class LocationHolder constructor(val binding: ItemChatLocationBinding) :
         } else {
             binding.chatName.setCompoundDrawables(null, null, null, null)
         }
-
+        binding.chatJump.isVisible = messageItem.expireAt != null
+        binding.chatJump.setImageResource(R.drawable.ic_expire_message)
         chatLayout(isMe, isLast)
     }
 }

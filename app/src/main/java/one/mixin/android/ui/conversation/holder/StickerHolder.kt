@@ -6,7 +6,9 @@ import android.view.View.GONE
 import android.view.View.INVISIBLE
 import android.view.View.VISIBLE
 import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.core.view.isVisible
 import one.mixin.android.Constants.Colors.SELECT_COLOR
+import one.mixin.android.R
 import one.mixin.android.databinding.ItemChatStickerBinding
 import one.mixin.android.extension.dp
 import one.mixin.android.extension.dpToPx
@@ -128,6 +130,8 @@ class StickerHolder constructor(val binding: ItemChatStickerBinding) : BaseViewH
             isRepresentative = isRepresentative,
             isSecret = messageItem.isSecret()
         )
+        binding.chatJump.isVisible = messageItem.expireAt != null
+        binding.chatJump.setImageResource(R.drawable.ic_expire_message)
         chatLayout(isMe, false)
     }
 

@@ -4,6 +4,7 @@ import android.graphics.Color
 import android.view.View
 import android.view.ViewGroup
 import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.core.view.isVisible
 import com.google.gson.Gson
 import one.mixin.android.Constants.Colors.SELECT_COLOR
 import one.mixin.android.R
@@ -245,6 +246,8 @@ class TranscriptHolder constructor(val binding: ItemChatTranscriptBinding) : Bas
             isSecret = messageItem.isSecret(),
             isWhite = true
         )
+        binding.chatJump.isVisible = messageItem.expireAt != null
+        binding.chatJump.setImageResource(R.drawable.ic_expire_message)
         chatLayout(isMe, isLast)
     }
 }

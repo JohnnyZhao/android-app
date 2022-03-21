@@ -3,6 +3,7 @@ package one.mixin.android.ui.conversation.holder
 import android.graphics.Color
 import android.view.View
 import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.core.view.isVisible
 import one.mixin.android.Constants.Colors.SELECT_COLOR
 import one.mixin.android.R
 import one.mixin.android.databinding.ItemChatAudioBinding
@@ -188,6 +189,8 @@ class AudioHolder constructor(val binding: ItemChatAudioBinding) : BaseViewHolde
                 true
             }
         }
+        binding.chatJump.isVisible = messageItem.expireAt != null
+        binding.chatJump.setImageResource(R.drawable.ic_expire_message)
     }
 
     private fun handleClick(

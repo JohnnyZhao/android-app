@@ -1076,4 +1076,18 @@
     <string name="sticker_store_remove_stickers">移除所有表情</string>
     <string name="sticker_my">我的表情</string>
     <string name="sticker_capital_none">还未添加任何表情</string>
+
+    <!--  disappearing message -->
+    <string name="disappearing_messages">限时消息</string>
+    <string name="disappearing_content">启用后，在此聊天中发送和接收的新消息\n将在看到消失，请阅读文档以了解更多。</string>
+    <string name="disappearing_content_learn">了解更多</string>
+    <string name="disappearing_off">关闭</string>
+    <string name="disappearing_option_1">30 秒</string>
+    <string name="disappearing_option_2">10 分</string>
+    <string name="disappearing_option_3">2 小时</string>
+    <string name="disappearing_option_4">1 天</string>
+    <string name="disappearing_option_5">1 周</string>
+    <string name="disappearing_option_6">自定义时间</string>
+    <string name="disappearing_messages_custom">自定义时间</string>
+    <string name="disappearing_set">设置</string>
 </resources>

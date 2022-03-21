@@ -241,6 +241,18 @@ fun Long.getRelativeTimeSpan(): String {
     return time.toString()
 }
 
+fun Long?.getTimeInterval(): String {
+    return when {
+        this == null -> "off"
+        this < 60000L -> "${this / 1000L} seconds"
+        this < 3600000L -> "${this / 60000L} minutes"
+        this < 86400000L -> "${this / 3600000L} hours"
+        this < 604800000L -> "${this / 86400000L} days"
+        this == 604800000L -> "1 weeks"
+        else -> "${this / 86400000L} days"
+    }
+}
+
 fun String.getRelativeTimeSpan(): String {
     val createTime = ZonedDateTime.parse(this).toOffsetDateTime().toEpochSecond() * 1000L
     return createTime.getRelativeTimeSpan()

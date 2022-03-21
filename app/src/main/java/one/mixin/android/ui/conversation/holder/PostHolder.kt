@@ -4,6 +4,7 @@ import android.graphics.Color
 import android.view.View
 import android.view.ViewGroup
 import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.core.view.isVisible
 import io.noties.markwon.Markwon
 import one.mixin.android.Constants.Colors.SELECT_COLOR
 import one.mixin.android.R
@@ -175,6 +176,8 @@ class PostHolder constructor(val binding: ItemChatPostBinding) : BaseViewHolder(
             isRepresentative = isRepresentative,
             isSecret = messageItem.isSecret(), isWhite = true
         )
+        binding.chatJump.isVisible = messageItem.expireAt != null
+        binding.chatJump.setImageResource(R.drawable.ic_expire_message)
         chatLayout(isMe, isLast)
     }
 }

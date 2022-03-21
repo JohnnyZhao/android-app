@@ -177,6 +177,7 @@ fun MixinDatabase.deleteMessageById(messageId: String) {
         messageDao().deleteMessageById(messageId)
         messageFts4Dao().deleteByMessageId(messageId)
         remoteMessageStatusDao().deleteByMessageId(messageId)
+        expiredMessageDao().deleteByMessageId(id)
     }
 }
 
@@ -185,17 +186,6 @@ suspend fun MixinDatabase.deleteMessageByConversationId(conversationId: String, 
     messageDao().deleteMessageByConversationId(conversationId, limit)
     mentionMessageDao().deleteMessageByConversationId(conversationId, limit)
     InvalidateFlow.emit(conversationId)
-}
-
-
-fun MixinDatabase.deleteMessage(messageId: String) {
-    runInTransaction {
-        pinMessageDao().deleteByMessageId(messageId)
-        mentionMessageDao().deleteMessage(messageId)
-        messageDao().deleteMessageById(messageId)
-        messageFts4Dao().deleteByMessageId(messageId)
-        remoteMessageStatusDao().deleteByMessageId(messageId)
-    }
 }
 
 // Insert message SQL

@@ -5,6 +5,7 @@ import android.view.GestureDetector
 import android.view.MotionEvent
 import android.view.View
 import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.core.view.isVisible
 import one.mixin.android.Constants.Colors.LINK_COLOR
 import one.mixin.android.Constants.Colors.SELECT_COLOR
 import one.mixin.android.R
@@ -230,6 +231,8 @@ class TextQuoteHolder constructor(val binding: ItemChatTextQuoteBinding) : BaseM
                 onItemListener.onSelect(!isSelect, messageItem, absoluteAdapterPosition)
             }
         }
+        binding.chatJump.isVisible = messageItem.expireAt != null
+        binding.chatJump.setImageResource(R.drawable.ic_expire_message)
         chatLayout(isMe, isLast)
         attachAction = if (messageItem.mentionRead == false) {
             {

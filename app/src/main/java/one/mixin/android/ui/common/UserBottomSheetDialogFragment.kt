@@ -53,6 +53,7 @@ import one.mixin.android.extension.dp
 import one.mixin.android.extension.dpToPx
 import one.mixin.android.extension.getClipboardManager
 import one.mixin.android.extension.getOtherPath
+import one.mixin.android.extension.getTimeInterval
 import one.mixin.android.extension.localTime
 import one.mixin.android.extension.notNullWithElse
 import one.mixin.android.extension.openPermissionSetting
@@ -411,6 +412,19 @@ class UserBottomSheetDialogFragment : MixinScrollableBottomSheetDialogFragment()
             }
         }
 
+        // Todo use real data
+        list.groups.add(
+            menuGroup {
+                menu {
+                    title = getString(R.string.disappearing_messages)
+                    subtitle = 30000L.getTimeInterval()
+                    action = {
+                        showDisappearing()
+                    }
+                }
+            }
+        )
+
         if (u.relationship == UserRelationship.FRIEND.name) {
             list.groups.add(
                 menuGroup {
@@ -733,6 +747,15 @@ class UserBottomSheetDialogFragment : MixinScrollableBottomSheetDialogFragment()
             }
             .setCancelable(false)
             .show()
+    }
+
+    private fun showDisappearing() {
+        dismiss()
+        activity?.addFragment(
+            this,
+            DisappearingFragment.newInstance(),
+            DisappearingFragment.TAG
+        )
     }
 
     private fun updateUserInfo(user: User) = lifecycleScope.launch {

@@ -30,7 +30,7 @@ interface ConversationDao : BaseDao<Conversation> {
             mu.full_name AS senderFullName, s.type AS SnapshotType,
             pu.full_name AS participantFullName, pu.user_id AS participantUserId,
             (SELECT count(1) FROM message_mentions me WHERE me.conversation_id = c.conversation_id AND me.has_read = 0) as mentionCount,  
-            mm.mentions AS mentions 
+            mm.mentions AS mentions, em.expire_at AS expireAt 
             FROM conversations c
             INNER JOIN users ou ON ou.user_id = c.owner_id
             LEFT JOIN messages m ON c.last_message_id = m.id
@@ -38,6 +38,7 @@ interface ConversationDao : BaseDao<Conversation> {
             LEFT JOIN users mu ON mu.user_id = m.user_id
             LEFT JOIN snapshots s ON s.snapshot_id = m.snapshot_id
             LEFT JOIN users pu ON pu.user_id = m.participant_id 
+            LEFT JOIN expired_messages em ON c.last_message_id = em.message_id
             """
     }
 

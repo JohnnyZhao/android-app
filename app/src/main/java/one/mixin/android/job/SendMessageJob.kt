@@ -16,6 +16,7 @@ import one.mixin.android.util.chat.InvalidateFlow
 import one.mixin.android.util.hyperlink.parseHyperlink
 import one.mixin.android.util.mention.parseMentionData
 import one.mixin.android.util.reportException
+import one.mixin.android.vo.ExpiredMessage
 import one.mixin.android.vo.MentionUser
 import one.mixin.android.vo.Message
 import one.mixin.android.vo.MessageCategory
@@ -51,6 +52,7 @@ open class SendMessageJob(
     private val recallMessageId: String? = null,
     private val krakenParam: KrakenParam? = null,
     private val isSilent: Boolean? = null,
+    private val expireIn: Long? = null,
     messagePriority: Int = PRIORITY_SEND_MESSAGE
 ) : MixinJob(Params(messagePriority).groupBy("send_message_group").requireWebSocketConnected().persist(), message.id) {
 
@@ -148,6 +150,21 @@ open class SendMessageJob(
         } else if (message.isSignal()) {
             sendSignalMessage()
         }
+        // conversationDao.findConversationById(message.conversationId)?.let { conversation ->
+        //     conversation.expireIn?.let { expireIn ->
+        // Todo delete test code
+        if (message.conversationId == "131d9290-0298-4dd5-b0f7-9ded04753ef9") {// test group
+            val expireIn = 10000L // test 10 seconds delete
+            expiredMessageDao.insert(
+                ExpiredMessage(
+                    message.id,
+                    expireIn,
+                    System.currentTimeMillis() + expireIn
+                )
+            )
+        }
+        // }
+        // }
         removeJob()
     }
 
@@ -177,6 +194,7 @@ open class SendMessageJob(
             mentions = getMentionData(message.id),
             recipient_ids = recipientIds,
             silent = isSilent,
+            expire_in = expireIn
         )
         val blazeMessage = if (message.isCall()) {
             if (message.isKraken()) {
@@ -283,7 +301,7 @@ open class SendMessageJob(
                 getMentionData(message.id)
             )
         } else {
-            signalProtocol.encryptGroupMessage(message, getMentionData(message.id), isSilent)
+            signalProtocol.encryptGroupMessage(message, getMentionData(message.id), isSilent, expireIn)
         }
     }
 

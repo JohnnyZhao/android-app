@@ -17,16 +17,21 @@ import com.birbit.android.jobqueue.network.NetworkUtil
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import one.mixin.android.Constants.DB_EXPIRED_LIMIT
 import one.mixin.android.Constants.MARK_REMOTE_LIMIT
 import one.mixin.android.MixinApplication
 import one.mixin.android.R
 import one.mixin.android.api.service.MessageService
+import one.mixin.android.db.ExpiredMessageDao
 import one.mixin.android.db.FloodMessageDao
 import one.mixin.android.db.JobDao
 import one.mixin.android.db.MixinDatabase
 import one.mixin.android.db.ParticipantDao
 import one.mixin.android.db.RemoteMessageStatusDao
+import one.mixin.android.db.deleteMessage
 import one.mixin.android.extension.base64Encode
 import one.mixin.android.extension.networkConnected
 import one.mixin.android.extension.notificationManager
@@ -53,6 +58,7 @@ import one.mixin.android.websocket.createParamBlazeMessage
 import one.mixin.android.websocket.createPlainJsonParam
 import timber.log.Timber
 import javax.inject.Inject
+import kotlin.math.abs
 
 @AndroidEntryPoint
 class BlazeMessageService : LifecycleService(), NetworkEventProvider.Listener, ChatWebSocket.WebSocketObserver {
@@ -79,22 +85,34 @@ class BlazeMessageService : LifecycleService(), NetworkEventProvider.Listener, C
 
     @Inject
     lateinit var networkUtil: JobNetworkUtil
+
     @Inject
     lateinit var database: MixinDatabase
+
     @Inject
     lateinit var webSocket: ChatWebSocket
+
     @Inject
     lateinit var floodMessageDao: FloodMessageDao
+
     @Inject
     lateinit var remoteMessageStatusDao: RemoteMessageStatusDao
+
+    @Inject
+    lateinit var expiredMessageDao: ExpiredMessageDao
+
     @Inject
     lateinit var participantDao: ParticipantDao
+
     @Inject
     lateinit var jobDao: JobDao
+
     @Inject
     lateinit var jobManager: MixinJobManager
+
     @Inject
     lateinit var callState: CallStateLiveData
+
     @Inject
     lateinit var messageService: MessageService
 
@@ -116,6 +134,7 @@ class BlazeMessageService : LifecycleService(), NetworkEventProvider.Listener, C
         startFloodJob()
         startAckJob()
         startStatusJob()
+        startExpiredJob()
         networkUtil.setListener(this)
     }
 
@@ -144,6 +163,7 @@ class BlazeMessageService : LifecycleService(), NetworkEventProvider.Listener, C
         stopAckJob()
         stopFloodJob()
         stopStatusJob()
+        stopExpiredJob()
         webSocket.disconnect()
     }
 
@@ -339,6 +359,21 @@ class BlazeMessageService : LifecycleService(), NetworkEventProvider.Listener, C
         }
     }
 
+    private fun startExpiredJob() {
+        database.invalidationTracker.addObserver(expiredObserver)
+    }
+
+    private fun stopExpiredJob() {
+        database.invalidationTracker.removeObserver(expiredObserver)
+    }
+
+    private var expiredJob: Job? = null
+    private val expiredObserver = object : InvalidationTracker.Observer("expired_messages") {
+        override fun onInvalidated(tables: MutableSet<String>) {
+            runExpiredJob()
+        }
+    }
+
     @Synchronized
     private fun runStatusJob() {
         try {
@@ -379,6 +414,55 @@ class BlazeMessageService : LifecycleService(), NetworkEventProvider.Listener, C
             processStatus()
         } else {
             true
+        }
+    }
+
+    private fun runExpiredJob() {
+        if (expiredJob?.isActive == true) {
+            return
+        }
+        expiredJob = lifecycleScope.launch(Dispatchers.IO) {
+            try {
+                processExpiredMessage()
+            } catch (e: Exception) {
+                Timber.e(e)
+                runExpiredJob()
+            }
+        }
+    }
+
+    private suspend fun startExpiredJob(expiredTime: Long) {
+        val nextExpirationTime = this.nextExpirationTime
+        if (expiredJob?.isActive == true && nextExpirationTime != null && expiredTime < nextExpirationTime) {
+            expiredJob?.cancelAndJoin()
+            runExpiredJob()
+        } else {
+            runExpiredJob()
+        }
+    }
+
+    private var nextExpirationTime: Long? = null
+
+    private tailrec suspend fun processExpiredMessage() {
+        val messages =
+            expiredMessageDao.getExpiredMessages(System.currentTimeMillis(), DB_EXPIRED_LIMIT)
+        if (messages.isNullOrEmpty()) {
+            val firstExpiredMessage = expiredMessageDao.getFirstExpiredMessage()
+            if (firstExpiredMessage == null) {
+                nextExpirationTime = null
+            } else {
+                nextExpirationTime = firstExpiredMessage.expireAt
+                delay(abs(requireNotNull(firstExpiredMessage.expireAt) - System.currentTimeMillis()))
+                processExpiredMessage()
+            }
+        } else {
+            val ids = messages.map { it.messageId }
+            Timber.e("Delete messages $ids")
+            ids.forEach { messageId ->
+                database.deleteMessageById(messageId)
+            }
+            nextExpirationTime = null
+            processExpiredMessage()
         }
     }
 }

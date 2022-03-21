@@ -1111,4 +1111,18 @@
     <string name="sticker_store_remove_stickers">Remove Stickers</string>
     <string name="sticker_my">My Stickers</string>
     <string name="sticker_capital_none">NO STICKER</string>
+
+    <!--  disappearing message -->
+    <string name="disappearing_messages">Disappearing Messages</string>
+    <string name="disappearing_content">When enabled, new messages sent and received \nin this chat will disappear after they have been \nseen, read the document to learn more.</string>
+    <string name="disappearing_content_learn">learn more</string>
+    <string name="disappearing_off">Off</string>
+    <string name="disappearing_option_1">30 seconds</string>
+    <string name="disappearing_option_2">10 minutes</string>
+    <string name="disappearing_option_3">2 hours</string>
+    <string name="disappearing_option_4">1 day</string>
+    <string name="disappearing_option_5">1 week</string>
+    <string name="disappearing_option_6">Custom Time</string>
+    <string name="disappearing_messages_custom">Custom Time</string>
+    <string name="disappearing_set">Set</string>
 </resources>

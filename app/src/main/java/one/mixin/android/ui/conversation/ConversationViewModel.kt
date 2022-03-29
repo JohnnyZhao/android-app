@@ -804,4 +804,8 @@ internal constructor(
     suspend fun findPinMessageById(messageId: String) = withContext(Dispatchers.IO) {
         conversationRepository.findPinMessageById(messageId)
     }
+
+    // Todo
+    suspend fun disappear(conversationId: String, interval: Long) =
+        conversationRepository.disappear(conversationId)
 }

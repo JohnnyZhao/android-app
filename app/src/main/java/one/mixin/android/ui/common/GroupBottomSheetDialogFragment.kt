@@ -408,7 +408,7 @@ class GroupBottomSheetDialogFragment : MixinScrollableBottomSheetDialogFragment(
         dismiss()
         activity?.addFragment(
             this,
-            DisappearingFragment.newInstance(),
+            DisappearingFragment.newInstance(conversation.conversationId),
             DisappearingFragment.TAG
         )
     }

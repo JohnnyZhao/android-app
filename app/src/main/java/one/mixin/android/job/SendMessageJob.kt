@@ -153,7 +153,7 @@ open class SendMessageJob(
         // conversationDao.findConversationById(message.conversationId)?.let { conversation ->
         //     conversation.expireIn?.let { expireIn ->
         // Todo delete test code
-        if (message.conversationId == "131d9290-0298-4dd5-b0f7-9ded04753ef9") {// test group
+        if (message.conversationId == "131d9290-0298-4dd5-b0f7-9ded04753ef9") { // test group
             val expireIn = 10000L // test 10 seconds delete
             expiredMessageDao.insert(
                 ExpiredMessage(

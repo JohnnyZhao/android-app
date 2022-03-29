@@ -751,11 +751,12 @@ class UserBottomSheetDialogFragment : MixinScrollableBottomSheetDialogFragment()
 
     private fun showDisappearing() {
         dismiss()
-        activity?.addFragment(
-            this,
-            DisappearingFragment.newInstance(),
-            DisappearingFragment.TAG
-        )
+        // Todo
+        // activity?.addFragment(
+        //     this,
+        //     DisappearingFragment.newInstance(),
+        //     DisappearingFragment.TAG
+        // )
     }
 
     private fun updateUserInfo(user: User) = lifecycleScope.launch {

@@ -6,11 +6,13 @@ import androidx.core.view.isVisible
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import one.mixin.android.R
+import one.mixin.android.api.handleMixinResponse
 import one.mixin.android.databinding.FragmentDisappearingBinding
 import one.mixin.android.extension.highlightLinkText
+import one.mixin.android.extension.withArgs
+import one.mixin.android.ui.conversation.ConversationFragment.Companion.CONVERSATION_ID
 import one.mixin.android.ui.conversation.ConversationViewModel
 import one.mixin.android.util.viewBinding
 import one.mixin.android.widget.picker.toTimeInterval
@@ -22,7 +24,13 @@ class DisappearingFragment : BaseFragment(R.layout.fragment_disappearing) {
     companion object {
         const val TAG = "DisappearingFragment"
 
-        fun newInstance() = DisappearingFragment()
+        fun newInstance(conversationId: String) = DisappearingFragment().withArgs {
+            putString(CONVERSATION_ID, conversationId)
+        }
+    }
+
+    private val conversationId by lazy {
+        requireNotNull(requireArguments().getString(CONVERSATION_ID))
     }
 
     private val viewModel by viewModels<ConversationViewModel>()
@@ -58,11 +66,11 @@ class DisappearingFragment : BaseFragment(R.layout.fragment_disappearing) {
     private fun initOption(interval: Long?) {
         when {
             interval == null || interval <= 0 -> updateOptionCheck(0)
-            interval == 30000L -> updateOptionCheck(1)
-            interval == 600000L -> updateOptionCheck(2)
-            interval == 7200000L -> updateOptionCheck(3)
-            interval == 86400000L -> updateOptionCheck(4)
-            interval == 604800000L -> updateOptionCheck(5)
+            interval == 30L -> updateOptionCheck(1)
+            interval == 600L -> updateOptionCheck(2)
+            interval == 7200L -> updateOptionCheck(3)
+            interval == 86400L -> updateOptionCheck(4)
+            interval == 604800L -> updateOptionCheck(5)
             else -> {
                 updateOptionCheck(6)
                 binding.disappearingOption6Interval.text = toTimeInterval(interval)
@@ -77,25 +85,25 @@ class DisappearingFragment : BaseFragment(R.layout.fragment_disappearing) {
         val learnUrl = requireContext().getString(R.string.setting_delete_account_url)
         binding.tipTv.highlightLinkText(info, arrayOf(learn), arrayOf(learnUrl))
         // Todo use real data
-        initOption(30000)
+        initOption(30)
         binding.apply {
             disappearingOff.setOnClickListener {
-                updateUI(0)
+                updateUI(0, 0L)
             }
             disappearingOption1.setOnClickListener {
-                updateUI(1)
+                updateUI(1, 30L)
             }
             disappearingOption2.setOnClickListener {
-                updateUI(2)
+                updateUI(2, 600L)
             }
             disappearingOption3.setOnClickListener {
-                updateUI(3)
+                updateUI(3, 7200L)
             }
             disappearingOption4.setOnClickListener {
-                updateUI(4)
+                updateUI(4, 86400L)
             }
             disappearingOption5.setOnClickListener {
-                updateUI(5)
+                updateUI(5, 604800L)
             }
 
             disappearingOption6.setOnClickListener {
@@ -106,10 +114,16 @@ class DisappearingFragment : BaseFragment(R.layout.fragment_disappearing) {
                                 disappearingOption6Iv.isVisible = false
                                 disappearingOption6Interval.isVisible = false
                                 disappearingOption6Arrow.isVisible = false
-                                updateUI(6)
+                                updateUI(6, it)
                                 disappearingOption6Interval.text = toTimeInterval(it)
                                 timeInterval = it
-                                Timber.e("Set interval ${toTimeInterval(it)} ${toTimeIntervalIndex(it)}")
+                                Timber.e(
+                                    "Set interval ${toTimeInterval(it)} ${
+                                    toTimeIntervalIndex(
+                                        it
+                                    )
+                                    }"
+                                )
                             }
                         }
                     }
@@ -121,12 +135,27 @@ class DisappearingFragment : BaseFragment(R.layout.fragment_disappearing) {
     // Todo replace real data
     private var timeInterval: Long? = null
 
-    private fun updateUI(index: Int) {
+    private fun updateUI(index: Int, interval: Long) {
         lifecycleScope.launch {
             pbGroup[index].isVisible = true
-            delay(1000)
-            updateOptionCheck(index)
-            pbGroup[index].isVisible = false
+            handleMixinResponse(
+                invokeNetwork = { viewModel.disappear(conversationId, interval) },
+                successBlock = { response ->
+                    // Todo
+                    updateOptionCheck(index)
+                },
+                doAfterNetworkSuccess = {
+                    pbGroup[index].isVisible = false
+                },
+                defaultErrorHandle = {
+                    // Todo
+                    pbGroup[index].isVisible = false
+                },
+                defaultExceptionHandle = {
+                    // Todo
+                    pbGroup[index].isVisible = false
+                }
+            )
         }
     }
 

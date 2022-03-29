@@ -62,4 +62,7 @@ interface ConversationService {
 
     @POST("conversations/{id}/circles")
     suspend fun updateCircles(@Path("id") id: String, @Body requests: List<ConversationCircleRequest>): MixinResponse<List<CircleConversation>>
+
+    @POST("conversations/{id}/disappear")
+    suspend fun disappear(@Path("id") id: String): MixinResponse<ConversationResponse>
 }

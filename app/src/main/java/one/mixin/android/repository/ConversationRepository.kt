@@ -626,4 +626,6 @@ internal constructor(
             remoteMessageStatusDao.updateConversationUnseen(conversationId)
         }
     }
+
+    suspend fun disappear(conversationId: String) = conversationService.disappear(conversationId)
 }

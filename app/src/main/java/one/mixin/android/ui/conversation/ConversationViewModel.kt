@@ -153,6 +153,10 @@ internal constructor(
 
     fun getConversationById(id: String) = conversationRepository.getConversationById(id)
 
+    suspend fun getConversation(id: String) = withContext(Dispatchers.IO) {
+        conversationRepository.getConversation(id)
+    }
+
     fun saveDraft(conversationId: String, text: String) = MixinApplication.appScope.launch {
         conversationRepository.saveDraft(conversationId, text)
     }

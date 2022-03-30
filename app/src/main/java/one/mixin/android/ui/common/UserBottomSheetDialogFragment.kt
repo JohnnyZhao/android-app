@@ -78,6 +78,7 @@ import one.mixin.android.ui.web.WebActivity
 import one.mixin.android.util.GsonHelper
 import one.mixin.android.util.debug.debugLongClick
 import one.mixin.android.vo.CallStateLiveData
+import one.mixin.android.vo.Conversation
 import one.mixin.android.vo.ConversationCategory
 import one.mixin.android.vo.ForwardAction
 import one.mixin.android.vo.ForwardMessage
@@ -118,7 +119,7 @@ class UserBottomSheetDialogFragment : MixinScrollableBottomSheetDialogFragment()
             return UserBottomSheetDialogFragment().apply {
                 arguments = Bundle().apply {
                     putParcelable(ARGS_USER, user)
-                    putString(ARGS_CONVERSATION_ID, conversationId)
+                    putString(ARGS_CONVERSATION_ID, conversationId ?: generateConversationId(Session.getAccountId()!!, user.userId))
                 }
             }.apply {
                 instant = this
@@ -133,8 +134,7 @@ class UserBottomSheetDialogFragment : MixinScrollableBottomSheetDialogFragment()
 
     private lateinit var user: User
 
-    // bot need conversation id
-    private var conversationId: String? = null
+    private lateinit var conversationId: String
     private var creator: User? = null
 
     @Inject
@@ -156,7 +156,7 @@ class UserBottomSheetDialogFragment : MixinScrollableBottomSheetDialogFragment()
     override fun setupDialog(dialog: Dialog, style: Int) {
         super.setupDialog(dialog, style)
         user = requireArguments().getParcelable(ARGS_USER)!!
-        conversationId = requireArguments().getString(ARGS_CONVERSATION_ID)
+        conversationId = requireArguments().getString(ARGS_CONVERSATION_ID)!!
         binding.title.rightIv.setOnClickListener { dismiss() }
         binding.avatar.setOnClickListener {
             if (!isAdded) return@setOnClickListener
@@ -187,13 +187,9 @@ class UserBottomSheetDialogFragment : MixinScrollableBottomSheetDialogFragment()
                     u.fullName != user.fullName
                 ) {
                     lifecycleScope.launch {
-                        val circleNames = bottomViewModel.findCirclesNameByConversationId(
-                            generateConversationId(
-                                Session.getAccountId()!!,
-                                u.userId
-                            )
-                        )
-                        initMenu(u, circleNames)
+                        val circleNames = bottomViewModel.findCirclesNameByConversationId(conversationId)
+                        val conversation = bottomViewModel.getConversation(conversationId)
+                        initMenu(u, circleNames, conversation)
                     }
                 }
                 user = u
@@ -224,11 +220,7 @@ class UserBottomSheetDialogFragment : MixinScrollableBottomSheetDialogFragment()
                 return@setOnClickListener
             }
             context?.let { ctx ->
-                if (MixinApplication.conversationId == null || generateConversationId(
-                        user.userId,
-                        Session.getAccountId()!!
-                    ) != MixinApplication.conversationId
-                ) {
+                if (MixinApplication.conversationId == null || conversationId != MixinApplication.conversationId) {
                     RxBus.publish(BotCloseEvent())
                     ConversationActivity.showAndClear(ctx, null, user.userId)
                     dismiss()
@@ -273,7 +265,7 @@ class UserBottomSheetDialogFragment : MixinScrollableBottomSheetDialogFragment()
         }
     }
 
-    private fun initMenu(u: User, circleNames: List<String>) {
+    private fun initMenu(u: User, circleNames: List<String>, conversation: Conversation?) {
         if (!isAdded) return
 
         val clearMenu = menu {
@@ -281,12 +273,7 @@ class UserBottomSheetDialogFragment : MixinScrollableBottomSheetDialogFragment()
             style = MenuStyle.Danger
             action = {
                 requireContext().showConfirmDialog(getString(R.string.group_info_clear_chat)) {
-                    bottomViewModel.deleteMessageByConversationId(
-                        generateConversationId(
-                            Session.getAccountId()!!,
-                            u.userId
-                        )
-                    )
+                    bottomViewModel.deleteMessageByConversationId(conversationId)
                     dismiss()
                 }
             }
@@ -390,13 +377,7 @@ class UserBottomSheetDialogFragment : MixinScrollableBottomSheetDialogFragment()
                 menu {
                     title = getString(R.string.contact_other_shared_media)
                     action = {
-                        SharedMediaActivity.show(
-                            requireContext(),
-                            generateConversationId(
-                                user.userId,
-                                Session.getAccountId()!!
-                            )
-                        )
+                        SharedMediaActivity.show(requireContext(), conversationId)
                         RxBus.publish(BotCloseEvent())
                         dismiss()
                     }
@@ -412,12 +393,11 @@ class UserBottomSheetDialogFragment : MixinScrollableBottomSheetDialogFragment()
             }
         }
 
-        // Todo use real data
         list.groups.add(
             menuGroup {
                 menu {
                     title = getString(R.string.disappearing_messages)
-                    subtitle = 30000L.getTimeInterval()
+                    subtitle = conversation.notNullWithElse({ it.expireIn.getTimeInterval() }, "")
                     action = {
                         showDisappearing()
                     }
@@ -624,12 +604,7 @@ class UserBottomSheetDialogFragment : MixinScrollableBottomSheetDialogFragment()
     }
 
     private fun startSearchConversation() = lifecycleScope.launch {
-        bottomViewModel.getConversation(
-            generateConversationId(
-                user.userId,
-                Session.getAccountId()!!
-            )
-        )?.let {
+        bottomViewModel.getConversation(conversationId)?.let {
             val searchMessageItem = if (it.category == ConversationCategory.CONTACT.name) {
                 SearchMessageItem(
                     it.conversationId,
@@ -712,10 +687,7 @@ class UserBottomSheetDialogFragment : MixinScrollableBottomSheetDialogFragment()
         if (LinkState.isOnline(linkState.state)) {
             outgoingCall(
                 requireContext(),
-                generateConversationId(
-                    Session.getAccountId()!!,
-                    user.userId
-                ),
+                conversationId,
                 user
             )
             RxBus.publish(BotCloseEvent())
@@ -751,12 +723,11 @@ class UserBottomSheetDialogFragment : MixinScrollableBottomSheetDialogFragment()
 
     private fun showDisappearing() {
         dismiss()
-        // Todo
-        // activity?.addFragment(
-        //     this,
-        //     DisappearingFragment.newInstance(),
-        //     DisappearingFragment.TAG
-        // )
+        activity?.addFragment(
+            this,
+            DisappearingFragment.newInstance(conversationId),
+            DisappearingFragment.TAG
+        )
     }
 
     private fun updateUserInfo(user: User) = lifecycleScope.launch {
@@ -996,7 +967,7 @@ class UserBottomSheetDialogFragment : MixinScrollableBottomSheetDialogFragment()
                         isFirstResource: Boolean
                     ): Boolean {
                         user.fullName?.let {
-                            val conversationId = generateConversationId(Session.getAccountId()!!, user.userId)
+                            val conversationId = conversationId
                             one.mixin.android.util.addPinShortcut(
                                 requireContext(),
                                 conversationId,
@@ -1028,7 +999,7 @@ class UserBottomSheetDialogFragment : MixinScrollableBottomSheetDialogFragment()
     private fun exportChat() {
         lifecycleScope.launch {
             val backupFile = File("${requireContext().getOtherPath().absolutePath}${File.separator}${user.fullName}-chats.txt")
-            bottomViewModel.exportChat(generateConversationId(user.userId, Session.getAccountId()!!), backupFile)
+            bottomViewModel.exportChat(conversationId, backupFile)
         }
     }
 

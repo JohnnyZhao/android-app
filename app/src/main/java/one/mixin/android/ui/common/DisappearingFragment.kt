@@ -63,17 +63,17 @@ class DisappearingFragment : BaseFragment(R.layout.fragment_disappearing) {
         }
     }
 
-    private fun initOption(interval: Long?) {
+    private fun Long?.initOption() {
         when {
-            interval == null || interval <= 0 -> updateOptionCheck(0)
-            interval == 30L -> updateOptionCheck(1)
-            interval == 600L -> updateOptionCheck(2)
-            interval == 7200L -> updateOptionCheck(3)
-            interval == 86400L -> updateOptionCheck(4)
-            interval == 604800L -> updateOptionCheck(5)
+            this == null || this <= 0 -> updateOptionCheck(0)
+            this == 30L -> updateOptionCheck(1)
+            this == 600L -> updateOptionCheck(2)
+            this == 7200L -> updateOptionCheck(3)
+            this == 86400L -> updateOptionCheck(4)
+            this == 604800L -> updateOptionCheck(5)
             else -> {
                 updateOptionCheck(6)
-                binding.disappearingOption6Interval.text = toTimeInterval(interval)
+                binding.disappearingOption6Interval.text = toTimeInterval(this)
             }
         }
     }
@@ -84,50 +84,53 @@ class DisappearingFragment : BaseFragment(R.layout.fragment_disappearing) {
         // Todo replace url
         val learnUrl = requireContext().getString(R.string.setting_delete_account_url)
         binding.tipTv.highlightLinkText(info, arrayOf(learn), arrayOf(learnUrl))
-        // Todo use real data
-        initOption(30)
-        binding.apply {
-            disappearingOff.setOnClickListener {
-                updateUI(0, 0L)
-            }
-            disappearingOption1.setOnClickListener {
-                updateUI(1, 30L)
-            }
-            disappearingOption2.setOnClickListener {
-                updateUI(2, 600L)
-            }
-            disappearingOption3.setOnClickListener {
-                updateUI(3, 7200L)
-            }
-            disappearingOption4.setOnClickListener {
-                updateUI(4, 86400L)
-            }
-            disappearingOption5.setOnClickListener {
-                updateUI(5, 604800L)
-            }
 
-            disappearingOption6.setOnClickListener {
-                DisappearingIntervalBottomFragment.newInstance(timeInterval)
-                    .apply {
-                        onSetCallback {
-                            this@DisappearingFragment.lifecycleScope.launch {
-                                disappearingOption6Iv.isVisible = false
-                                disappearingOption6Interval.isVisible = false
-                                disappearingOption6Arrow.isVisible = false
-                                updateUI(6, it)
-                                disappearingOption6Interval.text = toTimeInterval(it)
-                                timeInterval = it
-                                Timber.e(
-                                    "Set interval ${toTimeInterval(it)} ${
-                                    toTimeIntervalIndex(
-                                        it
+        lifecycleScope.launch {
+            val conversation = viewModel.getConversation(conversationId)
+            conversation?.expireIn.initOption()
+            binding.apply {
+                disappearingOff.setOnClickListener {
+                    updateUI(0, 0L)
+                }
+                disappearingOption1.setOnClickListener {
+                    updateUI(1, 30L)
+                }
+                disappearingOption2.setOnClickListener {
+                    updateUI(2, 600L)
+                }
+                disappearingOption3.setOnClickListener {
+                    updateUI(3, 7200L)
+                }
+                disappearingOption4.setOnClickListener {
+                    updateUI(4, 86400L)
+                }
+                disappearingOption5.setOnClickListener {
+                    updateUI(5, 604800L)
+                }
+
+                disappearingOption6.setOnClickListener {
+                    DisappearingIntervalBottomFragment.newInstance(timeInterval)
+                        .apply {
+                            onSetCallback {
+                                this@DisappearingFragment.lifecycleScope.launch {
+                                    disappearingOption6Iv.isVisible = false
+                                    disappearingOption6Interval.isVisible = false
+                                    disappearingOption6Arrow.isVisible = false
+                                    updateUI(6, it)
+                                    disappearingOption6Interval.text = toTimeInterval(it)
+                                    timeInterval = it
+                                    Timber.e(
+                                        "Set interval ${toTimeInterval(it)} ${
+                                        toTimeIntervalIndex(
+                                            it
+                                        )
+                                        }"
                                     )
-                                    }"
-                                )
+                                }
                             }
                         }
-                    }
-                    .showNow(parentFragmentManager, DisappearingIntervalBottomFragment.TAG)
+                        .showNow(parentFragmentManager, DisappearingIntervalBottomFragment.TAG)
+                }
             }
         }
     }

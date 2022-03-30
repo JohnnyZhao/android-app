@@ -12,8 +12,8 @@ import one.mixin.android.api.handleMixinResponse
 import one.mixin.android.databinding.FragmentDisappearingBinding
 import one.mixin.android.extension.highlightLinkText
 import one.mixin.android.extension.withArgs
-import one.mixin.android.ui.conversation.ConversationFragment.Companion.CONVERSATION_ID
 import one.mixin.android.ui.conversation.ConversationViewModel
+import one.mixin.android.util.ErrorHandler
 import one.mixin.android.util.viewBinding
 import one.mixin.android.widget.picker.toTimeInterval
 import one.mixin.android.widget.picker.toTimeIntervalIndex
@@ -23,14 +23,20 @@ import timber.log.Timber
 class DisappearingFragment : BaseFragment(R.layout.fragment_disappearing) {
     companion object {
         const val TAG = "DisappearingFragment"
-
-        fun newInstance(conversationId: String) = DisappearingFragment().withArgs {
+        private const val CONVERSATION_ID = "conversation_id"
+        private const val USER_ID = "user_id"
+        fun newInstance(conversationId: String, userId: String? = null) = DisappearingFragment().withArgs {
             putString(CONVERSATION_ID, conversationId)
+            putString(USER_ID, userId)
         }
     }
 
     private val conversationId by lazy {
         requireNotNull(requireArguments().getString(CONVERSATION_ID))
+    }
+
+    private val userId by lazy {
+        requireArguments().getString(USER_ID)
     }
 
     private val viewModel by viewModels<ConversationViewModel>()
@@ -88,6 +94,7 @@ class DisappearingFragment : BaseFragment(R.layout.fragment_disappearing) {
         lifecycleScope.launch {
             val conversation = viewModel.getConversation(conversationId)
             conversation?.expireIn.initOption()
+            timeInterval = conversation?.expireIn
             binding.apply {
                 disappearingOff.setOnClickListener {
                     updateUI(0, 0L)
@@ -118,7 +125,6 @@ class DisappearingFragment : BaseFragment(R.layout.fragment_disappearing) {
                                     disappearingOption6Arrow.isVisible = false
                                     updateUI(6, it)
                                     disappearingOption6Interval.text = toTimeInterval(it)
-                                    timeInterval = it
                                     Timber.e(
                                         "Set interval ${toTimeInterval(it)} ${
                                         toTimeIntervalIndex(
@@ -135,27 +141,40 @@ class DisappearingFragment : BaseFragment(R.layout.fragment_disappearing) {
         }
     }
 
-    // Todo replace real data
     private var timeInterval: Long? = null
 
     private fun updateUI(index: Int, interval: Long) {
-        lifecycleScope.launch {
+        lifecycleScope.launch(ErrorHandler.errorHandler) {
             pbGroup[index].isVisible = true
+            val conversation = viewModel.getConversation(conversationId)
+            if (conversation == null) {
+                if (userId != null) {
+                    val result = viewModel.createConversation(conversationId, userId!!)
+                    if (!result) {
+                        return@launch
+                    }
+                } else {
+                    return@launch
+                }
+            }
             handleMixinResponse(
                 invokeNetwork = { viewModel.disappear(conversationId, interval) },
                 successBlock = { response ->
-                    // Todo
-                    updateOptionCheck(index)
+                    if (response.isSuccess) {
+                        // Todo save conversation
+                        timeInterval = response.data?.expireIn
+                        updateOptionCheck(index)
+                    }
                 },
                 doAfterNetworkSuccess = {
                     pbGroup[index].isVisible = false
                 },
                 defaultErrorHandle = {
-                    // Todo
+                    ErrorHandler.handleMixinError(it.errorCode, it.errorDescription)
                     pbGroup[index].isVisible = false
                 },
                 defaultExceptionHandle = {
-                    // Todo
+                    ErrorHandler.handleError(it)
                     pbGroup[index].isVisible = false
                 }
             )

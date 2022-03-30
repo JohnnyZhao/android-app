@@ -152,8 +152,7 @@ internal constructor(
     suspend fun saveDraft(conversationId: String, draft: String) =
         conversationDao.saveDraft(conversationId, draft)
 
-    fun getConversation(conversationId: String) =
-        conversationDao.findConversationById(conversationId)
+    fun getConversation(conversationId: String) = conversationDao.findConversationById(conversationId)
 
     suspend fun fuzzySearchMessage(query: String, limit: Int, cancellationSignal: CancellationSignal): List<SearchMessageItem> =
         MessageProvider.fuzzySearchMessage(query.joinStar().replaceQuotationMark(), limit, appDatabase, cancellationSignal)
@@ -473,6 +472,8 @@ internal constructor(
     }
 
     fun create(request: ConversationRequest) = conversationService.create(request)
+
+    suspend fun createSuspend(request: ConversationRequest) = conversationService.createSuspend(request)
 
     fun participants(id: String, action: String, requests: List<ParticipantRequest>) =
         conversationService.participants(id, action, requests)

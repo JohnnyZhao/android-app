@@ -25,6 +25,8 @@ import one.mixin.android.Constants.MARK_LIMIT
 import one.mixin.android.Constants.PAGE_SIZE
 import one.mixin.android.MixinApplication
 import one.mixin.android.api.handleMixinResponse
+import one.mixin.android.api.request.ConversationRequest
+import one.mixin.android.api.request.ParticipantRequest
 import one.mixin.android.api.request.RelationshipRequest
 import one.mixin.android.api.request.StickerAddRequest
 import one.mixin.android.extension.copyFromInputStream
@@ -807,6 +809,26 @@ internal constructor(
 
     suspend fun findPinMessageById(messageId: String) = withContext(Dispatchers.IO) {
         conversationRepository.findPinMessageById(messageId)
+    }
+
+    suspend fun createConversation(conversationId: String, userId: String) = withContext(Dispatchers.IO) {
+        val conversation = conversationRepository.getConversation(conversationId)
+        if (conversation == null) {
+            val request = ConversationRequest(
+                conversationId = conversationId,
+                category = ConversationCategory.CONTACT.name,
+                participants = listOf(ParticipantRequest(userId, ""))
+            )
+            val response = conversationRepository.createSuspend(request)
+            if (response.isSuccess) {
+                val data = response.data
+                if (data != null) {
+                    conversationRepository.insertOrUpdateConversation(data)
+                    return@withContext true
+                }
+            }
+        }
+        return@withContext false
     }
 
     // Todo

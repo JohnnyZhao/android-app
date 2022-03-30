@@ -725,7 +725,7 @@ class UserBottomSheetDialogFragment : MixinScrollableBottomSheetDialogFragment()
         dismiss()
         activity?.addFragment(
             this,
-            DisappearingFragment.newInstance(conversationId),
+            DisappearingFragment.newInstance(conversationId, user.userId),
             DisappearingFragment.TAG
         )
     }

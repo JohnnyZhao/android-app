@@ -19,6 +19,9 @@ interface ConversationService {
     @POST("conversations")
     fun create(@Body request: ConversationRequest): Call<MixinResponse<ConversationResponse>>
 
+    @POST("conversations")
+    suspend fun createSuspend(@Body request: ConversationRequest): MixinResponse<ConversationResponse>
+
     @GET("conversations/{id}")
     fun getConversation(@Path("id") id: String): Call<MixinResponse<ConversationResponse>>
 

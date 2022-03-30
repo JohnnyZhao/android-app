@@ -578,7 +578,7 @@ class DecryptMessage(private val lifecycleScope: CoroutineScope) : Injector() {
                 }
                 database.insertAndNotifyConversation(message)
                 MessageFts4Helper.insertOrReplaceMessageFts4(message)
-                val userMap = mentions?.map { it.identityNumber to it.fullName }?.toMap()
+                val userMap = mentions?.associate { it.identityNumber to it.fullName }
                 generateNotification(message, data, userMap, quoteMe || mentionMe)
             }
             data.category.endsWith("_POST") -> {
@@ -960,8 +960,8 @@ class DecryptMessage(private val lifecycleScope: CoroutineScope) : Injector() {
 
     private fun processSystemSnapshotMessage(data: BlazeMessageData, snapshot: Snapshot) {
         val message = createMessage(
-            data.messageId, data.conversationId, data.userId, data.category, "",
-            data.createdAt, data.status, snapshot.type, null, snapshot.snapshotId
+            data.messageId, data.conversationId, data.userId, data.category, data.expireIn?.toString() ?: "",
+            data.createdAt, data.status, snapshot.type, null, snapshot.snapshotId,
         )
         snapshot.transactionHash?.let {
             snapshotDao.deletePendingSnapshotByHash(it)
@@ -1021,6 +1021,8 @@ class DecryptMessage(private val lifecycleScope: CoroutineScope) : Injector() {
             if (message.participantId != accountId) {
                 return
             }
+        } else if (systemMessage.action == SystemConversationAction.EXPIRE.name) {
+            jobManager.addJobInBackground(RefreshConversationJob(data.conversationId))
         }
         database.insertAndNotifyConversation(message)
     }

@@ -16,6 +16,7 @@ import one.mixin.android.util.chat.InvalidateFlow
 import one.mixin.android.util.hyperlink.parseHyperlink
 import one.mixin.android.util.mention.parseMentionData
 import one.mixin.android.util.reportException
+import one.mixin.android.vo.Conversation
 import one.mixin.android.vo.ExpiredMessage
 import one.mixin.android.vo.MentionUser
 import one.mixin.android.vo.Message
@@ -52,7 +53,6 @@ open class SendMessageJob(
     private val recallMessageId: String? = null,
     private val krakenParam: KrakenParam? = null,
     private val isSilent: Boolean? = null,
-    private val expireIn: Long? = null,
     messagePriority: Int = PRIORITY_SEND_MESSAGE
 ) : MixinJob(Params(messagePriority).groupBy("send_message_group").requireWebSocketConnected().persist(), message.id) {
 
@@ -143,18 +143,15 @@ open class SendMessageJob(
             return
         }
         jobManager.saveJob(this)
+        val conversation = conversationDao.findConversationById(message.conversationId)
         if (message.isPlain() || message.isCall() || message.isRecall() || message.isPin() || message.category == MessageCategory.APP_CARD.name) {
-            sendPlainMessage()
+            sendPlainMessage(conversation)
         } else if (message.isEncrypted()) {
-            sendEncryptedMessage()
+            sendEncryptedMessage(conversation)
         } else if (message.isSignal()) {
-            sendSignalMessage()
+            sendSignalMessage(conversation?.expireIn)
         }
-        // conversationDao.findConversationById(message.conversationId)?.let { conversation ->
-        //     conversation.expireIn?.let { expireIn ->
-        // Todo delete test code
-        if (message.conversationId == "131d9290-0298-4dd5-b0f7-9ded04753ef9") { // test group
-            val expireIn = 10000L // test 10 seconds delete
+        conversation?.expireIn?.let { expireIn ->
             expiredMessageDao.insert(
                 ExpiredMessage(
                     message.id,
@@ -163,13 +160,11 @@ open class SendMessageJob(
                 )
             )
         }
-        // }
-        // }
         removeJob()
     }
 
-    private fun sendPlainMessage() {
-        val conversation = conversationDao.findConversationById(message.conversationId) ?: return
+    private fun sendPlainMessage(conversation: Conversation?) {
+        conversation ?: return
         checkConversationExist(conversation)
         var content = message.content
         if (message.category == MessageCategory.PLAIN_TEXT.name ||
@@ -194,7 +189,7 @@ open class SendMessageJob(
             mentions = getMentionData(message.id),
             recipient_ids = recipientIds,
             silent = isSilent,
-            expire_in = expireIn
+            expire_in = conversation.expireIn
         )
         val blazeMessage = if (message.isCall()) {
             if (message.isKraken()) {
@@ -212,10 +207,10 @@ open class SendMessageJob(
     }
 
     @ExperimentalUnsignedTypes
-    private fun sendEncryptedMessage() {
-        val accountId = Session.getAccountId()!!
-        val conversation = conversationDao.findConversationById(message.conversationId) ?: return
+    private fun sendEncryptedMessage(conversation: Conversation?) {
+        conversation ?: return
         checkConversationExist(conversation)
+        val accountId = Session.getAccountId()!!
         var participantSessionKey = getBotSessionKey(accountId)
         if (participantSessionKey == null || participantSessionKey.publicKey.isNullOrBlank()) {
             syncConversation(message.conversationId)
@@ -225,7 +220,7 @@ open class SendMessageJob(
         if (participantSessionKey?.publicKey == null) {
             message.category = message.category.replace("ENCRYPTED_", "PLAIN_")
             messageDao.updateCategoryById(message.id, message.category)
-            sendPlainMessage()
+            sendPlainMessage(conversation)
             return
         }
 
@@ -255,7 +250,8 @@ open class SendMessageJob(
             encryptContent.base64Encode(),
             quote_message_id = message.quoteMessageId,
             mentions = getMentionData(message.id),
-            recipient_ids = recipientIds
+            recipient_ids = recipientIds,
+            expire_in = conversation.expireIn
         )
         val blazeMessage = createParamBlazeMessage(blazeParam)
         deliver(blazeMessage)
@@ -274,10 +270,10 @@ open class SendMessageJob(
             )
         }
 
-    private fun sendSignalMessage() {
+    private fun sendSignalMessage(expireIn: Long?) {
         if (resendData != null) {
             if (checkSignalSession(resendData.userId, resendData.sessionId)) {
-                deliver(encryptNormalMessage())
+                deliver(encryptNormalMessage(expireIn))
             }
             return
         }
@@ -285,14 +281,15 @@ open class SendMessageJob(
             checkConversation(message.conversationId)
         }
         checkSessionSenderKey(message.conversationId)
-        deliver(encryptNormalMessage())
+        deliver(encryptNormalMessage(expireIn))
     }
 
-    private fun encryptNormalMessage(): BlazeMessage {
+    private fun encryptNormalMessage(expireIn: Long?): BlazeMessage {
         if (message.isLive()) {
             message.content = message.content?.base64Encode()
         }
         return if (resendData != null) {
+            // Todo
             signalProtocol.encryptSessionMessage(
                 message,
                 resendData.userId,

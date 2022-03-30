@@ -31,7 +31,6 @@ import one.mixin.android.extension.alertDialogBuilder
 import one.mixin.android.extension.dp
 import one.mixin.android.extension.dpToPx
 import one.mixin.android.extension.getClipboardManager
-import one.mixin.android.extension.getTimeInterval
 import one.mixin.android.extension.localTime
 import one.mixin.android.extension.notNullWithElse
 import one.mixin.android.extension.screenHeight
@@ -55,6 +54,7 @@ import one.mixin.android.vo.ConversationStatus
 import one.mixin.android.vo.Participant
 import one.mixin.android.vo.ParticipantRole
 import one.mixin.android.vo.SearchMessageItem
+import one.mixin.android.widget.picker.getTimeInterval
 import org.threeten.bp.Instant
 import java.io.File
 
@@ -262,8 +262,6 @@ class GroupBottomSheetDialogFragment : MixinScrollableBottomSheetDialogFragment(
                     }
                 )
 
-                // Todo delete test
-                // if (conversation.expireIn != null) {
                 list.groups.add(
                     menuGroup {
                         menu {
@@ -275,7 +273,6 @@ class GroupBottomSheetDialogFragment : MixinScrollableBottomSheetDialogFragment(
                         }
                     }
                 )
-                // }
             }
             val muteMenu = if (conversation.muteUntil.notNullWithElse(
                     {

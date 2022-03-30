@@ -13,4 +13,4 @@ data class SystemConversationMessagePayload(
     val role: String?
 )
 
-enum class SystemConversationAction { JOIN, EXIT, ADD, REMOVE, CREATE, UPDATE, ROLE }
+enum class SystemConversationAction { JOIN, EXIT, ADD, REMOVE, CREATE, UPDATE, ROLE, EXPIRE }

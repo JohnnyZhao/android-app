@@ -111,6 +111,24 @@ class SystemHolder constructor(val binding: ItemChatSystemBinding) : BaseViewHol
             SystemConversationAction.ROLE.name -> {
                 binding.chatInfo.text = getText(R.string.group_role)
             }
+            SystemConversationAction.EXPIRE.name -> {
+                val timeInterval = messageItem.content?.toLongOrNull()
+                val name = if (id == messageItem.participantUserId) {
+                    getText(R.string.chat_you_start)
+                } else {
+                    messageItem.participantFullName
+                }
+                binding.chatInfo.text =
+                    if (timeInterval == null || timeInterval <= 0) {
+                        String.format(
+                            getText(R.string.chat_expired_disabled), name
+                        )
+                    } else {
+                        String.format(
+                            getText(R.string.chat_expired_set), name, timeInterval
+                        )
+                    }
+            }
             else -> {
                 binding.chatInfo.text = getText(R.string.chat_not_support)
             }

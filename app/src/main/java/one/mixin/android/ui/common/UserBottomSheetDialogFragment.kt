@@ -53,7 +53,6 @@ import one.mixin.android.extension.dp
 import one.mixin.android.extension.dpToPx
 import one.mixin.android.extension.getClipboardManager
 import one.mixin.android.extension.getOtherPath
-import one.mixin.android.extension.getTimeInterval
 import one.mixin.android.extension.localTime
 import one.mixin.android.extension.notNullWithElse
 import one.mixin.android.extension.openPermissionSetting
@@ -92,6 +91,7 @@ import one.mixin.android.vo.notMessengerUser
 import one.mixin.android.vo.showVerifiedOrBot
 import one.mixin.android.webrtc.outgoingCall
 import one.mixin.android.websocket.ContactMessagePayload
+import one.mixin.android.widget.picker.getTimeInterval
 import org.threeten.bp.Instant
 import timber.log.Timber
 import java.io.File

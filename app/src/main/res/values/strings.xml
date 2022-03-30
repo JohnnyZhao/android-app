@@ -708,6 +708,9 @@
     <string name="chat_you">you</string>
     <string name="chat_group_checking">Checking link</string>
     <string name="chat_expired">Expired</string>
+    <string name="chat_expired_set">%1$s set disappearing message time to %2$s.</string>
+    <string name="chat_expired_disabled">%1$s disabled disappearing message.</string>
+    <string name="group_ok">OK</string>
     <string name="link_error">This link is invalid</string>
     <string name="bottom_sheet_check_payment_info">Checking payment info</string>
     <string name="bottom_sheet_invalid_payment">Invalid payment</string>

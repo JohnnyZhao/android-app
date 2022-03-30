@@ -32,3 +32,10 @@ fun toTimeIntervalIndex(interval: Long): Pair<Int, Int> = when {
     interval < 604800L -> Pair(3, (interval / 86400L).toInt() - 1)
     else -> Pair(4, (interval / 604800L).toInt() - 1)
 }
+
+fun Long?.getTimeInterval(): String {
+    return when {
+        this == null -> "off"
+        else -> toTimeInterval(this)
+    }
+}

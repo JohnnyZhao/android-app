@@ -233,7 +233,9 @@ class DecryptMessage(private val lifecycleScope: CoroutineScope) : Injector() {
             ColorUtil.parseColor(item.color.trim())
         }
         data.expireIn?.let { expireIn ->
-            expiredMessageDao.insert(ExpiredMessage(data.messageId, expireIn, null))
+            if (expireIn > 0) {
+                expiredMessageDao.insert(ExpiredMessage(data.messageId, expireIn, null))
+            }
         }
         database.insertAndNotifyConversation(message)
         updateRemoteMessageStatus(data.messageId, MessageStatus.DELIVERED)
@@ -278,7 +280,9 @@ class DecryptMessage(private val lifecycleScope: CoroutineScope) : Injector() {
             }
         }
         data.expireIn?.let { expireIn ->
-            expiredMessageDao.insert(ExpiredMessage(data.messageId, expireIn, null))
+            if (expireIn > 0) {
+                expiredMessageDao.insert(ExpiredMessage(data.messageId, expireIn, null))
+            }
         }
         database.insertAndNotifyConversation(message)
         updateRemoteMessageStatus(data.messageId, MessageStatus.DELIVERED)
@@ -574,7 +578,9 @@ class DecryptMessage(private val lifecycleScope: CoroutineScope) : Injector() {
                 }
                 val (mentions, mentionMe) = parseMentionData(plain, data.messageId, data.conversationId, userDao, messageMentionDao, data.userId)
                 data.expireIn?.let { expireIn ->
-                    expiredMessageDao.insert(ExpiredMessage(data.messageId, expireIn, null))
+                    if (expireIn > 0) {
+                        expiredMessageDao.insert(ExpiredMessage(data.messageId, expireIn, null))
+                    }
                 }
                 database.insertAndNotifyConversation(message)
                 MessageFts4Helper.insertOrReplaceMessageFts4(message)
@@ -594,7 +600,9 @@ class DecryptMessage(private val lifecycleScope: CoroutineScope) : Injector() {
                     data.status
                 )
                 data.expireIn?.let { expireIn ->
-                    expiredMessageDao.insert(ExpiredMessage(data.messageId, expireIn, null))
+                    if (expireIn > 0) {
+                        expiredMessageDao.insert(ExpiredMessage(data.messageId, expireIn, null))
+                    }
                 }
                 database.insertAndNotifyConversation(message)
                 MessageFts4Helper.insertOrReplaceMessageFts4(message)
@@ -605,7 +613,9 @@ class DecryptMessage(private val lifecycleScope: CoroutineScope) : Injector() {
                 if (checkLocationData(plain)) {
                     val message = createLocationMessage(data.messageId, data.conversationId, data.userId, data.category, plain, data.status, data.createdAt)
                     data.expireIn?.let { expireIn ->
-                        expiredMessageDao.insert(ExpiredMessage(data.messageId, expireIn, null))
+                        if (expireIn > 0) {
+                            expiredMessageDao.insert(ExpiredMessage(data.messageId, expireIn, null))
+                        }
                     }
                     database.insertAndNotifyConversation(message)
                     generateNotification(message, data)
@@ -629,7 +639,9 @@ class DecryptMessage(private val lifecycleScope: CoroutineScope) : Injector() {
                     )
                 }
                 data.expireIn?.let { expireIn ->
-                    expiredMessageDao.insert(ExpiredMessage(data.messageId, expireIn, null))
+                    if (expireIn > 0) {
+                        expiredMessageDao.insert(ExpiredMessage(data.messageId, expireIn, null))
+                    }
                 }
                 database.insertAndNotifyConversation(message)
                 lifecycleScope.launch {
@@ -660,7 +672,9 @@ class DecryptMessage(private val lifecycleScope: CoroutineScope) : Injector() {
                     )
                 }
                 data.expireIn?.let { expireIn ->
-                    expiredMessageDao.insert(ExpiredMessage(data.messageId, expireIn, null))
+                    if (expireIn > 0) {
+                        expiredMessageDao.insert(ExpiredMessage(data.messageId, expireIn, null))
+                    }
                 }
                 database.insertAndNotifyConversation(message)
                 lifecycleScope.launch {
@@ -685,7 +699,9 @@ class DecryptMessage(private val lifecycleScope: CoroutineScope) : Injector() {
                     )
                 }
                 data.expireIn?.let { expireIn ->
-                    expiredMessageDao.insert(ExpiredMessage(data.messageId, expireIn, null))
+                    if (expireIn > 0) {
+                        expiredMessageDao.insert(ExpiredMessage(data.messageId, expireIn, null))
+                    }
                 }
                 database.insertAndNotifyConversation(message)
                 MessageFts4Helper.insertOrReplaceMessageFts4(message)
@@ -710,7 +726,9 @@ class DecryptMessage(private val lifecycleScope: CoroutineScope) : Injector() {
                     )
                 }
                 data.expireIn?.let { expireIn ->
-                    expiredMessageDao.insert(ExpiredMessage(data.messageId, expireIn, null))
+                    if (expireIn > 0) {
+                        expiredMessageDao.insert(ExpiredMessage(data.messageId, expireIn, null))
+                    }
                 }
                 database.insertAndNotifyConversation(message)
                 jobManager.addJobInBackground(AttachmentDownloadJob(message))
@@ -744,7 +762,9 @@ class DecryptMessage(private val lifecycleScope: CoroutineScope) : Injector() {
                     )
                 }
                 data.expireIn?.let { expireIn ->
-                    expiredMessageDao.insert(ExpiredMessage(data.messageId, expireIn, null))
+                    if (expireIn > 0) {
+                        expiredMessageDao.insert(ExpiredMessage(data.messageId, expireIn, null))
+                    }
                 }
                 database.insertAndNotifyConversation(message)
                 generateNotification(message, data)
@@ -765,7 +785,9 @@ class DecryptMessage(private val lifecycleScope: CoroutineScope) : Injector() {
                     )
                 }
                 data.expireIn?.let { expireIn ->
-                    expiredMessageDao.insert(ExpiredMessage(data.messageId, expireIn, null))
+                    if (expireIn > 0) {
+                        expiredMessageDao.insert(ExpiredMessage(data.messageId, expireIn, null))
+                    }
                 }
                 database.insertAndNotifyConversation(message)
                 val fullName = user?.fullName
@@ -790,7 +812,9 @@ class DecryptMessage(private val lifecycleScope: CoroutineScope) : Injector() {
                     liveData.width, liveData.height, liveData.url, liveData.thumbUrl, data.status, data.createdAt
                 )
                 data.expireIn?.let { expireIn ->
-                    expiredMessageDao.insert(ExpiredMessage(data.messageId, expireIn, null))
+                    if (expireIn > 0) {
+                        expiredMessageDao.insert(ExpiredMessage(data.messageId, expireIn, null))
+                    }
                 }
                 database.insertAndNotifyConversation(message)
                 generateNotification(message, data)
@@ -801,7 +825,9 @@ class DecryptMessage(private val lifecycleScope: CoroutineScope) : Injector() {
                 ) else plainText
                 val message = processTranscriptMessage(data, plain) ?: return
                 data.expireIn?.let { expireIn ->
-                    expiredMessageDao.insert(ExpiredMessage(data.messageId, expireIn, null))
+                    if (expireIn > 0) {
+                        expiredMessageDao.insert(ExpiredMessage(data.messageId, expireIn, null))
+                    }
                 }
                 database.insertAndNotifyConversation(message)
                 generateNotification(message, data)
@@ -816,7 +842,9 @@ class DecryptMessage(private val lifecycleScope: CoroutineScope) : Injector() {
             }
         if (transcripts.isEmpty()) {
             data.expireIn?.let { expireIn ->
-                expiredMessageDao.insert(ExpiredMessage(data.messageId, expireIn, null))
+                if (expireIn > 0) {
+                    expiredMessageDao.insert(ExpiredMessage(data.messageId, expireIn, null))
+                }
             }
             messageDao.insert(
                 createTranscriptMessage(

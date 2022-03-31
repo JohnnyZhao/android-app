@@ -99,8 +99,7 @@ class ContactCardHolder(val binding: ItemChatContactCardBinding) : BaseViewHolde
                 true
             }
         }
-        binding.chatJump.isVisible = messageItem.expireAt != null
-        binding.chatJump.setImageResource(R.drawable.ic_expire_message)
+        chatJumpLayout(binding.chatJump, isMe, messageItem.expireAt, R.id.chat_layout)
     }
 
     override fun chatLayout(isMe: Boolean, isLast: Boolean, isBlink: Boolean) {

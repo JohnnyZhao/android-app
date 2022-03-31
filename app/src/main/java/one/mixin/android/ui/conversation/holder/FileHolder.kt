@@ -8,7 +8,6 @@ import android.text.style.BackgroundColorSpan
 import android.view.View
 import android.widget.SeekBar
 import androidx.constraintlayout.widget.ConstraintLayout
-import androidx.core.view.isVisible
 import com.google.android.exoplayer2.util.MimeTypes
 import one.mixin.android.Constants.Colors.HIGHLIGHTED
 import one.mixin.android.Constants.Colors.SELECT_COLOR
@@ -229,8 +228,7 @@ class FileHolder constructor(val binding: ItemChatFileBinding) : BaseViewHolder(
                 true
             }
         }
-        binding.chatJump.isVisible = messageItem.expireAt != null
-        binding.chatJump.setImageResource(R.drawable.ic_expire_message)
+        chatJumpLayout(binding.chatJump, isMe, messageItem.expireAt, R.id.chat_msg_layout)
     }
 
     private fun handleClick(

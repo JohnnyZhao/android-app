@@ -18,6 +18,9 @@ interface ExpiredMessageDao : BaseDao<ExpiredMessage> {
     @Query("UPDATE expired_messages SET expire_at = :expireAt WHERE expire_at > :expireAt AND message_id = :messageId")
     fun updateExpiredMessage(messageId: String, expireAt: String)
 
+    @Query("UPDATE expired_messages SET expire_at = (:currentTime + expire_in) WHERE (expire_at > (:currentTime + expire_in) OR expire_at IS NULL)  AND message_id = :messageId")
+    fun markRead(messageId: String, currentTime: Long)
+
     @Query("DELETE FROM expired_messages WHERE message_id = :messageId")
     fun deleteByMessageId(messageId: String)
 }

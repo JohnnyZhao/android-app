@@ -245,3 +245,5 @@ fun String.getRelativeTimeSpan(): String {
     val createTime = ZonedDateTime.parse(this).toOffsetDateTime().toEpochSecond() * 1000L
     return createTime.getRelativeTimeSpan()
 }
+
+fun currentTimeSeconds() = System.currentTimeMillis() / 1000

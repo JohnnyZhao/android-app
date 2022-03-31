@@ -33,6 +33,7 @@ import one.mixin.android.db.ParticipantDao
 import one.mixin.android.db.RemoteMessageStatusDao
 import one.mixin.android.db.deleteMessage
 import one.mixin.android.extension.base64Encode
+import one.mixin.android.extension.currentTimeSeconds
 import one.mixin.android.extension.networkConnected
 import one.mixin.android.extension.notificationManager
 import one.mixin.android.extension.supportsOreo
@@ -394,6 +395,7 @@ class BlazeMessageService : LifecycleService(), NetworkEventProvider.Listener, C
             return false
         }
         list.map { msg ->
+            database.expiredMessageDao().markRead(msg.messageId, currentTimeSeconds())
             createAckJob(
                 ACKNOWLEDGE_MESSAGE_RECEIPTS,
                 BlazeAckMessage(msg.messageId, MessageStatus.READ.name)
@@ -445,7 +447,7 @@ class BlazeMessageService : LifecycleService(), NetworkEventProvider.Listener, C
 
     private tailrec suspend fun processExpiredMessage() {
         val messages =
-            expiredMessageDao.getExpiredMessages(System.currentTimeMillis() / 1000, DB_EXPIRED_LIMIT)
+            expiredMessageDao.getExpiredMessages(currentTimeSeconds(), DB_EXPIRED_LIMIT)
         if (messages.isNullOrEmpty()) {
             val firstExpiredMessage = expiredMessageDao.getFirstExpiredMessage()
             if (firstExpiredMessage == null) {

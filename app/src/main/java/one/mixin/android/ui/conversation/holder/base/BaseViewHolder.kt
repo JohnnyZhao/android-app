@@ -5,9 +5,13 @@ import android.animation.ValueAnimator
 import android.graphics.Color
 import android.graphics.drawable.Drawable
 import android.view.View
+import android.widget.ImageView
 import androidx.annotation.ColorInt
 import androidx.annotation.DrawableRes
+import androidx.annotation.IdRes
 import androidx.appcompat.content.res.AppCompatResources
+import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
@@ -112,6 +116,26 @@ abstract class BaseViewHolder constructor(containerView: View) :
     protected fun blink() {
         if (!blinkAnim.isRunning) {
             blinkAnim.start()
+        }
+    }
+
+    fun chatJumpLayout(
+        chatJump: ImageView,
+        isMe: Boolean,
+        expireAt: Long?,
+        @IdRes id: Int
+    ) {
+        chatJump.isVisible = expireAt != null
+        chatJump.setImageResource(R.drawable.ic_expire_message)
+
+        (chatJump.layoutParams as ConstraintLayout.LayoutParams).apply {
+            if (isMe) {
+                endToStart = id
+                startToEnd = View.NO_ID
+            } else {
+                endToStart = View.NO_ID
+                startToEnd = id
+            }
         }
     }
 

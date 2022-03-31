@@ -197,8 +197,8 @@ class TextHolder constructor(val binding: ItemChatTextBinding) : BaseMentionHold
             messageItem.isSecret()
         )
 
-        binding.chatJump.isVisible = messageItem.expireAt != null
-        binding.chatJump.setImageResource(R.drawable.ic_expire_message)
+        chatJumpLayout(binding.chatJump, isMe, messageItem.expireAt, R.id.chat_layout)
+
         chatLayout(isMe, isLast)
 
         attachAction = if (messageItem.mentionRead == false) {

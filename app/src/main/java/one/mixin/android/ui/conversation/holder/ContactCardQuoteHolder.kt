@@ -150,7 +150,6 @@ class ContactCardQuoteHolder constructor(val binding: ItemChatContactCardQuoteBi
             isRepresentative = isRepresentative,
             isSecret = messageItem.isSecret(),
         )
-        binding.chatJump.isVisible = messageItem.expireAt != null
-        binding.chatJump.setImageResource(R.drawable.ic_expire_message)
+        chatJumpLayout(binding.chatJump, isMe, messageItem.expireAt, R.id.chat_msg_layout)
     }
 }

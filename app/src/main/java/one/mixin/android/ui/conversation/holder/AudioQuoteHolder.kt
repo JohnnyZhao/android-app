@@ -226,8 +226,7 @@ class AudioQuoteHolder constructor(val binding: ItemChatAudioQuoteBinding) : Med
                 onItemListener.onSelect(!isSelect, messageItem, absoluteAdapterPosition)
             }
         }
-        binding.chatJump.isVisible = messageItem.expireAt != null
-        binding.chatJump.setImageResource(R.drawable.ic_expire_message)
+        chatJumpLayout(binding.chatJump, isMe, messageItem.expireAt, R.id.chat_msg_layout)
         chatLayout(isMe, isLast)
     }
 

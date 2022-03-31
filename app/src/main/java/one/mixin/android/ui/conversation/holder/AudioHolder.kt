@@ -189,8 +189,7 @@ class AudioHolder constructor(val binding: ItemChatAudioBinding) : BaseViewHolde
                 true
             }
         }
-        binding.chatJump.isVisible = messageItem.expireAt != null
-        binding.chatJump.setImageResource(R.drawable.ic_expire_message)
+        chatJumpLayout(binding.chatJump, isMe, messageItem.expireAt, R.id.chat_msg_layout)
     }
 
     private fun handleClick(

@@ -928,7 +928,8 @@ class ConversationAdapter(
                     oldItem.assetIcon == newItem.assetIcon &&
                     oldItem.mentionRead == newItem.mentionRead &&
                     oldItem.content == newItem.content &&
-                    oldItem.isPin == newItem.isPin
+                    oldItem.isPin == newItem.isPin &&
+                    oldItem.expireAt == newItem.expireAt
             }
         }
     }

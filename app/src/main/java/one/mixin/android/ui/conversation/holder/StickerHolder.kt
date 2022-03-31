@@ -130,8 +130,7 @@ class StickerHolder constructor(val binding: ItemChatStickerBinding) : BaseViewH
             isRepresentative = isRepresentative,
             isSecret = messageItem.isSecret()
         )
-        binding.chatJump.isVisible = messageItem.expireAt != null
-        binding.chatJump.setImageResource(R.drawable.ic_expire_message)
+        chatJumpLayout(binding.chatJump, isMe, messageItem.expireAt, R.id.chat_layout)
         chatLayout(isMe, false)
     }
 

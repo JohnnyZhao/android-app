@@ -190,8 +190,7 @@ class ImageHolder constructor(val binding: ItemChatImageBinding) : MediaHolder(b
         dataThumbImage = messageItem.thumbImage
         dataSize = messageItem.mediaSize
         isGif = messageItem.mediaMimeType.equals(MimeType.GIF.toString(), true)
-        binding.chatJump.isVisible = messageItem.expireAt != null
-        binding.chatJump.setImageResource(R.drawable.ic_expire_message)
+        chatJumpLayout(binding.chatJump, isMe, messageItem.expireAt, R.id.chat_layout)
         chatLayout(isMe, isLast)
     }
 

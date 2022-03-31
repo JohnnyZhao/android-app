@@ -156,7 +156,7 @@ open class SendMessageJob(
                 ExpiredMessage(
                     message.id,
                     expireIn,
-                    System.currentTimeMillis() + expireIn
+                    System.currentTimeMillis() / 1000 + expireIn
                 )
             )
         }

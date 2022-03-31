@@ -4,6 +4,7 @@ import io.reactivex.Observable
 import one.mixin.android.api.MixinResponse
 import one.mixin.android.api.request.ConversationCircleRequest
 import one.mixin.android.api.request.ConversationRequest
+import one.mixin.android.api.request.DisappearRequest
 import one.mixin.android.api.request.ParticipantRequest
 import one.mixin.android.api.response.AttachmentResponse
 import one.mixin.android.api.response.ConversationResponse
@@ -67,5 +68,5 @@ interface ConversationService {
     suspend fun updateCircles(@Path("id") id: String, @Body requests: List<ConversationCircleRequest>): MixinResponse<List<CircleConversation>>
 
     @POST("conversations/{id}/disappear")
-    suspend fun disappear(@Path("id") id: String): MixinResponse<ConversationResponse>
+    suspend fun disappear(@Path("id") id: String, @Body request: DisappearRequest): MixinResponse<ConversationResponse>
 }

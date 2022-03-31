@@ -209,6 +209,7 @@ open class Injector {
                         conversationData.announcement,
                         conversationData.muteUntil,
                         conversationData.createdAt,
+                        conversationData.expireIn,
                         status
                     )
                     val remote = mutableListOf<Participant>()

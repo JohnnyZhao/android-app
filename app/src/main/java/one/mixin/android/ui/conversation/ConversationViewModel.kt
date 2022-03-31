@@ -26,6 +26,7 @@ import one.mixin.android.Constants.PAGE_SIZE
 import one.mixin.android.MixinApplication
 import one.mixin.android.api.handleMixinResponse
 import one.mixin.android.api.request.ConversationRequest
+import one.mixin.android.api.request.DisappearRequest
 import one.mixin.android.api.request.ParticipantRequest
 import one.mixin.android.api.request.RelationshipRequest
 import one.mixin.android.api.request.StickerAddRequest
@@ -831,7 +832,9 @@ internal constructor(
         return@withContext false
     }
 
-    // Todo
-    suspend fun disappear(conversationId: String, interval: Long) =
-        conversationRepository.disappear(conversationId)
+    suspend fun disappear(conversationId: String, duration: Long) =
+        conversationRepository.disappear(conversationId, DisappearRequest(duration))
+
+    suspend fun updateConversationExpireIn(conversationId: String, expireIn: Long?) =
+        conversationRepository.updateConversationExpireIn(conversationId, expireIn)
 }

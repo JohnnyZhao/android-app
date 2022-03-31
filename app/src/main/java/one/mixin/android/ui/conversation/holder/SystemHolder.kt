@@ -9,6 +9,7 @@ import one.mixin.android.ui.conversation.adapter.ConversationAdapter
 import one.mixin.android.ui.conversation.holder.base.BaseViewHolder
 import one.mixin.android.vo.MessageItem
 import one.mixin.android.websocket.SystemConversationAction
+import one.mixin.android.widget.picker.toTimeInterval
 
 class SystemHolder constructor(val binding: ItemChatSystemBinding) : BaseViewHolder(binding.root) {
 
@@ -113,10 +114,10 @@ class SystemHolder constructor(val binding: ItemChatSystemBinding) : BaseViewHol
             }
             SystemConversationAction.EXPIRE.name -> {
                 val timeInterval = messageItem.content?.toLongOrNull()
-                val name = if (id == messageItem.participantUserId) {
+                val name = if (id == messageItem.userId) {
                     getText(R.string.chat_you_start)
                 } else {
-                    messageItem.participantFullName
+                    messageItem.userFullName
                 }
                 binding.chatInfo.text =
                     if (timeInterval == null || timeInterval <= 0) {
@@ -125,7 +126,7 @@ class SystemHolder constructor(val binding: ItemChatSystemBinding) : BaseViewHol
                         )
                     } else {
                         String.format(
-                            getText(R.string.chat_expired_set), name, timeInterval
+                            getText(R.string.chat_expired_set), name, toTimeInterval(timeInterval)
                         )
                     }
             }

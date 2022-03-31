@@ -164,6 +164,7 @@ class DisappearingFragment : BaseFragment(R.layout.fragment_disappearing) {
                         // Todo save conversation
                         timeInterval = response.data?.expireIn
                         updateOptionCheck(index)
+                        viewModel.updateConversationExpireIn(conversationId, timeInterval)
                     }
                 },
                 doAfterNetworkSuccess = {

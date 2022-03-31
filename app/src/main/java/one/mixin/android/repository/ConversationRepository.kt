@@ -19,6 +19,7 @@ import one.mixin.android.api.MixinResponse
 import one.mixin.android.api.handleMixinResponse
 import one.mixin.android.api.request.ConversationCircleRequest
 import one.mixin.android.api.request.ConversationRequest
+import one.mixin.android.api.request.DisappearRequest
 import one.mixin.android.api.request.ParticipantRequest
 import one.mixin.android.api.response.ConversationResponse
 import one.mixin.android.api.response.UserSession
@@ -248,6 +249,9 @@ internal constructor(
     suspend fun updateAnnouncement(conversationId: String, announcement: String) =
         conversationDao.updateConversationAnnouncement(conversationId, announcement)
 
+    suspend fun updateConversationExpireIn(conversationId: String, expireIn: Long?) =
+        conversationDao.updateConversationExpireIn(conversationId, expireIn)
+
     fun getLimitParticipants(conversationId: String, limit: Int) =
         participantDao.getLimitParticipants(conversationId, limit)
 
@@ -309,7 +313,9 @@ internal constructor(
                 .setIconUrl(data.iconUrl)
                 .setAnnouncement(data.announcement)
                 .setMuteUntil(data.muteUntil)
-                .setCodeUrl(data.codeUrl).build()
+                .setCodeUrl(data.codeUrl)
+                .setExpireIn(data.expireIn)
+                .build()
             conversationDao.insert(c)
             if (!c.announcement.isNullOrBlank()) {
                 RxBus.publish(GroupEvent(data.conversationId))
@@ -329,6 +335,7 @@ internal constructor(
                 data.announcement,
                 data.muteUntil,
                 data.createdAt,
+                data.expireIn,
                 status
             )
             if (data.announcement.isNotBlank() && c.announcement != data.announcement) {
@@ -628,5 +635,5 @@ internal constructor(
         }
     }
 
-    suspend fun disappear(conversationId: String) = conversationService.disappear(conversationId)
+    suspend fun disappear(conversationId: String, disappearRequest: DisappearRequest) = conversationService.disappear(conversationId, disappearRequest)
 }

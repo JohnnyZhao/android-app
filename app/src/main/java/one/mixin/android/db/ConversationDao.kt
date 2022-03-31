@@ -144,7 +144,7 @@ interface ConversationDao : BaseDao<Conversation> {
 
     @Query(
         "UPDATE conversations SET owner_id = :ownerId, category = :category, name = :name, announcement = :announcement, " +
-            "mute_until = :muteUntil, created_at = :createdAt, status = :status WHERE conversation_id = :conversationId"
+            "mute_until = :muteUntil, created_at = :createdAt, expire_in = :expireIn, status = :status WHERE conversation_id = :conversationId"
     )
     fun updateConversation(
         conversationId: String,
@@ -154,11 +154,15 @@ interface ConversationDao : BaseDao<Conversation> {
         announcement: String?,
         muteUntil: String?,
         createdAt: String,
+        expireIn: Long?,
         status: Int
     )
 
     @Query("UPDATE conversations SET announcement = :announcement WHERE conversation_id = :conversationId")
     suspend fun updateConversationAnnouncement(conversationId: String, announcement: String)
+
+    @Query("UPDATE conversations SET expire_in = :expireIn WHERE conversation_id = :conversationId")
+    suspend fun updateConversationExpireIn(conversationId: String, expireIn: Long?)
 
     @Query("UPDATE conversations SET mute_until = :muteUntil WHERE conversation_id = :conversationId")
     fun updateGroupMuteUntil(conversationId: String, muteUntil: String)

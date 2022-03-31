@@ -26,8 +26,8 @@ fun toTimeInterval(interval: Long): String = when {
 }
 
 fun toTimeIntervalIndex(interval: Long): Pair<Int, Int> = when {
-    interval < 60L -> Pair(0, (interval / 10L).toInt() - 1)
-    interval < 3600L -> Pair(1, (interval / 600L).toInt() - 1)
+    interval < 60L -> Pair(0, (interval / 1L).toInt() - 1)
+    interval < 3600L -> Pair(1, (interval / 60L).toInt() - 1)
     interval < 86400L -> Pair(2, (interval / 3600L).toInt() - 1)
     interval < 604800L -> Pair(3, (interval / 86400L).toInt() - 1)
     else -> Pair(4, (interval / 604800L).toInt() - 1)

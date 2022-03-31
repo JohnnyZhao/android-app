@@ -984,7 +984,8 @@ class DecryptMessage(private val lifecycleScope: CoroutineScope) : Injector() {
             userDao.insert(createSystemUser())
         }
         val message = createMessage(
-            data.messageId, data.conversationId, userId, data.category, "",
+            data.messageId, data.conversationId, userId, data.category,
+            systemMessage.expireIn?.toString() ?: "",
             data.createdAt, data.status, systemMessage.action, systemMessage.participantId
         )
 

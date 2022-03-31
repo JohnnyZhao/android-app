@@ -120,6 +120,7 @@ import one.mixin.android.widget.BottomSheet
 import one.mixin.android.widget.BulletinView
 import one.mixin.android.widget.DraggableRecyclerView
 import one.mixin.android.widget.DraggableRecyclerView.Companion.FLING_DOWN
+import one.mixin.android.widget.picker.toTimeInterval
 import java.io.File
 import javax.inject.Inject
 import kotlin.math.min
@@ -886,6 +887,26 @@ class ConversationListFragment : LinkFragment() {
                         }
                         SystemConversationAction.ROLE.name -> {
                             binding.msgTv.text = getText(R.string.group_role)
+                        }
+                        SystemConversationAction.EXPIRE.name -> {
+                            val timeInterval = conversationItem.content?.toLongOrNull()
+                            val name = if (id == conversationItem.senderId) {
+                                getText(R.string.chat_you_start)
+                            } else {
+                                conversationItem.senderFullName
+                            }
+                            binding.msgTv.text =
+                                if (timeInterval == null || timeInterval <= 0) {
+                                    String.format(
+                                        getText(R.string.chat_expired_disabled), name
+                                    )
+                                } else {
+                                    String.format(
+                                        getText(R.string.chat_expired_set),
+                                        name,
+                                        toTimeInterval(timeInterval)
+                                    )
+                                }
                         }
                         else -> {
                             binding.msgTv.text = ""

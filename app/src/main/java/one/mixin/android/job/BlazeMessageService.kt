@@ -445,14 +445,14 @@ class BlazeMessageService : LifecycleService(), NetworkEventProvider.Listener, C
 
     private tailrec suspend fun processExpiredMessage() {
         val messages =
-            expiredMessageDao.getExpiredMessages(System.currentTimeMillis(), DB_EXPIRED_LIMIT)
+            expiredMessageDao.getExpiredMessages(System.currentTimeMillis() / 1000, DB_EXPIRED_LIMIT)
         if (messages.isNullOrEmpty()) {
             val firstExpiredMessage = expiredMessageDao.getFirstExpiredMessage()
             if (firstExpiredMessage == null) {
                 nextExpirationTime = null
             } else {
                 nextExpirationTime = firstExpiredMessage.expireAt
-                delay(abs(requireNotNull(firstExpiredMessage.expireAt) - System.currentTimeMillis()))
+                delay(abs(requireNotNull(firstExpiredMessage.expireAt) * 1000 - System.currentTimeMillis()))
                 processExpiredMessage()
             }
         } else {

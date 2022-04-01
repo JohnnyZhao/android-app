@@ -303,6 +303,7 @@ abstract class MixinJob(
         val response = conversationApi.create(request).execute().body()
         if (response != null && response.isSuccess && response.data != null && !isCancelled) {
             conversationDao.updateConversationStatusById(conversation.conversationId, ConversationStatus.SUCCESS.ordinal)
+            conversationDao.updateConversationExpireInById(conversation.conversationId, response.data?.expireIn)
 
             val sessionParticipants = response.data!!.participantSessions.let { resp ->
                 resp?.map {

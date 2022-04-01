@@ -139,6 +139,9 @@ interface ConversationDao : BaseDao<Conversation> {
     @Query("UPDATE conversations SET status = :status WHERE conversation_id = :conversationId")
     fun updateConversationStatusById(conversationId: String, status: Int)
 
+    @Query("UPDATE conversations SET expire_in = :expireIn WHERE conversation_id = :conversationId")
+    fun updateConversationExpireInById(conversationId: String, expireIn: Long?)
+
     @Query("UPDATE conversations SET pin_time = :pinTime WHERE conversation_id = :conversationId")
     fun updateConversationPinTimeById(conversationId: String, pinTime: String?)
 

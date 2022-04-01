@@ -15,6 +15,8 @@ import androidx.room.InvalidationTracker
 import com.birbit.android.jobqueue.network.NetworkEventProvider
 import com.birbit.android.jobqueue.network.NetworkUtil
 import dagger.hilt.android.AndroidEntryPoint
+import io.reactivex.disposables.Disposable
+import io.reactivex.schedulers.Schedulers
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancelAndJoin
@@ -24,6 +26,7 @@ import one.mixin.android.Constants.DB_EXPIRED_LIMIT
 import one.mixin.android.Constants.MARK_REMOTE_LIMIT
 import one.mixin.android.MixinApplication
 import one.mixin.android.R
+import one.mixin.android.RxBus
 import one.mixin.android.api.service.MessageService
 import one.mixin.android.db.ExpiredMessageDao
 import one.mixin.android.db.FloodMessageDao
@@ -32,6 +35,7 @@ import one.mixin.android.db.MixinDatabase
 import one.mixin.android.db.ParticipantDao
 import one.mixin.android.db.RemoteMessageStatusDao
 import one.mixin.android.db.deleteMessage
+import one.mixin.android.event.ExpiredEvent
 import one.mixin.android.extension.base64Encode
 import one.mixin.android.extension.currentTimeSeconds
 import one.mixin.android.extension.networkConnected
@@ -122,12 +126,14 @@ class BlazeMessageService : LifecycleService(), NetworkEventProvider.Listener, C
 
     private val powerManager by lazy { getSystemService<PowerManager>() }
     private var isIgnoringBatteryOptimizations = false
+    private var disposable: Disposable? = null
 
     override fun onBind(intent: Intent): IBinder? {
         super.onBind(intent)
         return null
     }
 
+    @SuppressLint("AutoDispose")
     override fun onCreate() {
         super.onCreate()
         webSocket.setWebSocketObserver(this)
@@ -137,6 +143,16 @@ class BlazeMessageService : LifecycleService(), NetworkEventProvider.Listener, C
         startStatusJob()
         startExpiredJob()
         networkUtil.setListener(this)
+        if (disposable == null) {
+            disposable = RxBus.listen(ExpiredEvent::class.java).observeOn(Schedulers.io())
+                .subscribe { event ->
+                    val currentTime = currentTimeSeconds()
+                    database.expiredMessageDao().markRead(event.messageId, currentTime)
+                    lifecycleScope.launch(Dispatchers.IO) {
+                        startExpiredJob(event.expireIn + currentTime)
+                    }
+                }
+        }
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -166,6 +182,7 @@ class BlazeMessageService : LifecycleService(), NetworkEventProvider.Listener, C
         stopStatusJob()
         stopExpiredJob()
         webSocket.disconnect()
+        disposable?.dispose()
     }
 
     override fun onNetworkChange(networkStatus: Int) {
@@ -395,7 +412,6 @@ class BlazeMessageService : LifecycleService(), NetworkEventProvider.Listener, C
             return false
         }
         list.map { msg ->
-            database.expiredMessageDao().markRead(msg.messageId, currentTimeSeconds())
             createAckJob(
                 ACKNOWLEDGE_MESSAGE_RECEIPTS,
                 BlazeAckMessage(msg.messageId, MessageStatus.READ.name)

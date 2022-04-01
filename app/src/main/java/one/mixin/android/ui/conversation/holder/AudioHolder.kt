@@ -6,7 +6,9 @@ import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.isVisible
 import one.mixin.android.Constants.Colors.SELECT_COLOR
 import one.mixin.android.R
+import one.mixin.android.RxBus
 import one.mixin.android.databinding.ItemChatAudioBinding
+import one.mixin.android.event.ExpiredEvent
 import one.mixin.android.extension.dp
 import one.mixin.android.extension.dpToPx
 import one.mixin.android.extension.formatMillis
@@ -14,6 +16,7 @@ import one.mixin.android.extension.textResource
 import one.mixin.android.job.MixinJobManager.Companion.getAttachmentProcess
 import one.mixin.android.ui.conversation.adapter.ConversationAdapter
 import one.mixin.android.ui.conversation.holder.base.BaseViewHolder
+import one.mixin.android.ui.conversation.holder.base.Terminable
 import one.mixin.android.util.AudioPlayer
 import one.mixin.android.vo.MediaStatus
 import one.mixin.android.vo.MessageItem
@@ -21,7 +24,7 @@ import one.mixin.android.vo.isSecret
 import one.mixin.android.vo.mediaDownloaded
 import kotlin.math.min
 
-class AudioHolder constructor(val binding: ItemChatAudioBinding) : BaseViewHolder(binding.root) {
+class AudioHolder constructor(val binding: ItemChatAudioBinding) : BaseViewHolder(binding.root), Terminable {
 
     private val maxWidth by lazy {
         itemView.context.dpToPx(255f)
@@ -189,7 +192,7 @@ class AudioHolder constructor(val binding: ItemChatAudioBinding) : BaseViewHolde
                 true
             }
         }
-        chatJumpLayout(binding.chatJump, isMe, messageItem.expireAt, R.id.chat_msg_layout)
+        chatJumpLayout(binding.chatJump, isMe, messageItem.expireIn, R.id.chat_msg_layout)
     }
 
     private fun handleClick(
@@ -248,6 +251,12 @@ class AudioHolder constructor(val binding: ItemChatAudioBinding) : BaseViewHolde
                     R.drawable.chat_bubble_other_night
                 )
             }
+        }
+    }
+
+    override fun onRead(messageItem: MessageItem) {
+        if (messageItem.expireIn != null && (messageItem.mediaStatus == MediaStatus.READ.name || messageItem.mediaStatus == MediaStatus.EXPIRED.name)) {
+            RxBus.publish(ExpiredEvent(messageItem.messageId, messageItem.expireIn))
         }
     }
 }

@@ -9,17 +9,22 @@ import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.isVisible
 import one.mixin.android.Constants.Colors.SELECT_COLOR
 import one.mixin.android.R
+import one.mixin.android.RxBus
 import one.mixin.android.databinding.ItemChatStickerBinding
+import one.mixin.android.event.ExpiredEvent
 import one.mixin.android.extension.dp
 import one.mixin.android.extension.dpToPx
 import one.mixin.android.extension.loadSticker
 import one.mixin.android.extension.round
 import one.mixin.android.ui.conversation.adapter.ConversationAdapter
 import one.mixin.android.ui.conversation.holder.base.BaseViewHolder
+import one.mixin.android.ui.conversation.holder.base.Terminable
 import one.mixin.android.vo.MessageItem
 import one.mixin.android.vo.isSecret
 
-class StickerHolder constructor(val binding: ItemChatStickerBinding) : BaseViewHolder(binding.root) {
+class StickerHolder constructor(val binding: ItemChatStickerBinding) :
+    BaseViewHolder(binding.root),
+    Terminable {
 
     init {
         val radius = itemView.context.dpToPx(4f).toFloat()
@@ -130,7 +135,7 @@ class StickerHolder constructor(val binding: ItemChatStickerBinding) : BaseViewH
             isRepresentative = isRepresentative,
             isSecret = messageItem.isSecret()
         )
-        chatJumpLayout(binding.chatJump, isMe, messageItem.expireAt, R.id.chat_layout)
+        chatJumpLayout(binding.chatJump, isMe, messageItem.expireIn, R.id.chat_layout)
         chatLayout(isMe, false)
     }
 
@@ -142,6 +147,12 @@ class StickerHolder constructor(val binding: ItemChatStickerBinding) : BaseViewH
         } else {
             (binding.chatLayout.layoutParams as ConstraintLayout.LayoutParams).horizontalBias = 0f
             itemView.requestLayout()
+        }
+    }
+
+    override fun onRead(messageItem: MessageItem) {
+        if (messageItem.expireIn != null) {
+            RxBus.publish(ExpiredEvent(messageItem.messageId, messageItem.expireIn))
         }
     }
 }

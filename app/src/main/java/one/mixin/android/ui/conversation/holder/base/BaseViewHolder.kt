@@ -122,19 +122,21 @@ abstract class BaseViewHolder constructor(containerView: View) :
     fun chatJumpLayout(
         chatJump: ImageView,
         isMe: Boolean,
-        expireAt: Long?,
+        expireIn: Long?,
         @IdRes id: Int
     ) {
-        chatJump.isVisible = expireAt != null
-        chatJump.setImageResource(R.drawable.ic_expire_message)
+        chatJump.isVisible = expireIn != null
+        if (expireIn != null) {
+            chatJump.setImageResource(R.drawable.ic_expire_message)
 
-        (chatJump.layoutParams as ConstraintLayout.LayoutParams).apply {
-            if (isMe) {
-                endToStart = id
-                startToEnd = View.NO_ID
-            } else {
-                endToStart = View.NO_ID
-                startToEnd = id
+            (chatJump.layoutParams as ConstraintLayout.LayoutParams).apply {
+                if (isMe) {
+                    endToStart = id
+                    startToEnd = View.NO_ID
+                } else {
+                    endToStart = View.NO_ID
+                    startToEnd = id
+                }
             }
         }
     }

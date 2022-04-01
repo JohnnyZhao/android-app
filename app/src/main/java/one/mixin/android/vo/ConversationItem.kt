@@ -37,7 +37,7 @@ data class ConversationItem(
     val appId: String?,
     val mentions: String?,
     val mentionCount: Int?,
-    val expireAt: Long?
+    val expireIn: Long?
 ) : ICategory, IConversationCategory {
     companion object {
         val DIFF_CALLBACK = object : DiffUtil.ItemCallback<ConversationItem>() {
@@ -81,7 +81,7 @@ data class ConversationItem(
         return false
     }
 
-    fun isExpire() = expireAt != null
+    fun isExpire() = expireIn != null
 
     fun isBot(): Boolean {
         return category == ConversationCategory.CONTACT.name && appId != null

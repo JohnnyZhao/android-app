@@ -149,7 +149,7 @@ open class SendMessageJob(
         } else if (message.isEncrypted()) {
             sendEncryptedMessage(conversation)
         } else if (message.isSignal()) {
-            sendSignalMessage(conversation?.expireIn)
+            sendSignalMessage(conversation)
         }
         conversation?.expireIn?.let { expireIn ->
             expiredMessageDao.insert(
@@ -270,18 +270,17 @@ open class SendMessageJob(
             )
         }
 
-    private fun sendSignalMessage(expireIn: Long?) {
+    private fun sendSignalMessage(conversation: Conversation?) {
+        conversation ?: return
+        checkConversationExist(conversation)
         if (resendData != null) {
             if (checkSignalSession(resendData.userId, resendData.sessionId)) {
-                deliver(encryptNormalMessage(expireIn))
+                deliver(encryptNormalMessage(conversation.expireIn))
             }
             return
         }
-        if (!signalProtocol.isExistSenderKey(message.conversationId, message.userId)) {
-            checkConversation(message.conversationId)
-        }
         checkSessionSenderKey(message.conversationId)
-        deliver(encryptNormalMessage(expireIn))
+        deliver(encryptNormalMessage(conversation.expireIn))
     }
 
     private fun encryptNormalMessage(expireIn: Long?): BlazeMessage {

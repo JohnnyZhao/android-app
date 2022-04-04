@@ -220,7 +220,7 @@ class UserBottomSheetDialogFragment : MixinScrollableBottomSheetDialogFragment()
                 return@setOnClickListener
             }
             context?.let { ctx ->
-                if (MixinApplication.conversationId == null || conversationId != MixinApplication.conversationId) {
+                if (MixinApplication.conversationId == null || generateConversationId(user.userId, Session.getAccountId()!!) != MixinApplication.conversationId) {
                     RxBus.publish(BotCloseEvent())
                     ConversationActivity.showAndClear(ctx, null, user.userId)
                     dismiss()
@@ -767,14 +767,13 @@ class UserBottomSheetDialogFragment : MixinScrollableBottomSheetDialogFragment()
                     }
                 bottomViewModel.findUserById(app.creatorId)
                     .observe(
-                        this@UserBottomSheetDialogFragment,
-                        Observer { u ->
-                            creator = u
-                            if (u == null) {
-                                bottomViewModel.refreshUser(app.creatorId, true)
-                            }
+                        this@UserBottomSheetDialogFragment
+                    ) { u ->
+                        creator = u
+                        if (u == null) {
+                            bottomViewModel.refreshUser(app.creatorId, true)
                         }
-                    )
+                    }
             }
         } else {
             binding.openFl.visibility = GONE

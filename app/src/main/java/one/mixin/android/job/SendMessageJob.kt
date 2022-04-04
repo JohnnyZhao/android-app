@@ -144,28 +144,31 @@ open class SendMessageJob(
         }
         jobManager.saveJob(this)
         val conversation = conversationDao.findConversationById(message.conversationId)
-        if (message.isPlain() || message.isCall() || message.isRecall() || message.isPin() || message.category == MessageCategory.APP_CARD.name) {
-            sendPlainMessage(conversation)
-        } else if (message.isEncrypted()) {
-            sendEncryptedMessage(conversation)
-        } else if (message.isSignal()) {
-            sendSignalMessage(conversation)
-        }
-        conversation?.expireIn?.let { expireIn ->
-            expiredMessageDao.insert(
-                ExpiredMessage(
-                    message.id,
-                    expireIn,
-                    System.currentTimeMillis() / 1000 + expireIn
+        val expiredMessageCallback = fun(expireIn: Long?) {
+            expireIn?.let { e ->
+                expiredMessageDao.insert(
+                    ExpiredMessage(
+                        message.id,
+                        e,
+                        System.currentTimeMillis() / 1000 + e
+                    )
                 )
-            )
+            }
         }
+        if (message.isPlain() || message.isCall() || message.isRecall() || message.isPin() || message.category == MessageCategory.APP_CARD.name) {
+            sendPlainMessage(conversation, expiredMessageCallback)
+        } else if (message.isEncrypted()) {
+            sendEncryptedMessage(conversation, expiredMessageCallback)
+        } else if (message.isSignal()) {
+            sendSignalMessage(conversation, expiredMessageCallback)
+        }
+
         removeJob()
     }
 
-    private fun sendPlainMessage(conversation: Conversation?) {
+    private fun sendPlainMessage(conversation: Conversation?, callback: (Long?) -> Unit) {
         conversation ?: return
-        checkConversationExist(conversation)
+        val expireIn = checkConversationExist(conversation)
         var content = message.content
         if (message.category == MessageCategory.PLAIN_TEXT.name ||
             message.category == MessageCategory.PLAIN_POST.name ||
@@ -189,7 +192,7 @@ open class SendMessageJob(
             mentions = getMentionData(message.id),
             recipient_ids = recipientIds,
             silent = isSilent,
-            expire_in = conversation.expireIn
+            expire_in = expireIn
         )
         val blazeMessage = if (message.isCall()) {
             if (message.isKraken()) {
@@ -204,12 +207,13 @@ open class SendMessageJob(
             createParamBlazeMessage(blazeParam)
         }
         deliver(blazeMessage)
+        callback(expireIn)
     }
 
     @ExperimentalUnsignedTypes
-    private fun sendEncryptedMessage(conversation: Conversation?) {
+    private fun sendEncryptedMessage(conversation: Conversation?, callback: (Long?) -> Unit) {
         conversation ?: return
-        checkConversationExist(conversation)
+        val expireIn = checkConversationExist(conversation)
         val accountId = Session.getAccountId()!!
         var participantSessionKey = getBotSessionKey(accountId)
         if (participantSessionKey == null || participantSessionKey.publicKey.isNullOrBlank()) {
@@ -220,7 +224,7 @@ open class SendMessageJob(
         if (participantSessionKey?.publicKey == null) {
             message.category = message.category.replace("ENCRYPTED_", "PLAIN_")
             messageDao.updateCategoryById(message.id, message.category)
-            sendPlainMessage(conversation)
+            sendPlainMessage(conversation, callback)
             return
         }
 
@@ -251,10 +255,11 @@ open class SendMessageJob(
             quote_message_id = message.quoteMessageId,
             mentions = getMentionData(message.id),
             recipient_ids = recipientIds,
-            expire_in = conversation.expireIn
+            expire_in = expireIn
         )
         val blazeMessage = createParamBlazeMessage(blazeParam)
         deliver(blazeMessage)
+        callback(expireIn)
     }
 
     private fun getBotSessionKey(accountId: String): ParticipantSessionKey? =
@@ -270,17 +275,19 @@ open class SendMessageJob(
             )
         }
 
-    private fun sendSignalMessage(conversation: Conversation?) {
+    private fun sendSignalMessage(conversation: Conversation?, callback: (Long?) -> Unit) {
         conversation ?: return
-        checkConversationExist(conversation)
+        val expireIn = checkConversationExist(conversation)
         if (resendData != null) {
             if (checkSignalSession(resendData.userId, resendData.sessionId)) {
-                deliver(encryptNormalMessage(conversation.expireIn))
+                deliver(encryptNormalMessage(expireIn))
+                callback(expireIn)
             }
             return
         }
         checkSessionSenderKey(message.conversationId)
-        deliver(encryptNormalMessage(conversation.expireIn))
+        deliver(encryptNormalMessage(expireIn))
+        callback(expireIn)
     }
 
     private fun encryptNormalMessage(expireIn: Long?): BlazeMessage {

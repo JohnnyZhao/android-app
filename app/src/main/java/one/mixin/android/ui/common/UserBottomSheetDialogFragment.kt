@@ -75,6 +75,7 @@ import one.mixin.android.ui.media.SharedMediaActivity
 import one.mixin.android.ui.search.SearchMessageFragment
 import one.mixin.android.ui.web.WebActivity
 import one.mixin.android.util.GsonHelper
+import one.mixin.android.util.addPinShortcut
 import one.mixin.android.util.debug.debugLongClick
 import one.mixin.android.vo.CallStateLiveData
 import one.mixin.android.vo.Conversation
@@ -119,7 +120,7 @@ class UserBottomSheetDialogFragment : MixinScrollableBottomSheetDialogFragment()
             return UserBottomSheetDialogFragment().apply {
                 arguments = Bundle().apply {
                     putParcelable(ARGS_USER, user)
-                    putString(ARGS_CONVERSATION_ID, conversationId ?: generateConversationId(Session.getAccountId()!!, user.userId))
+                    putString(ARGS_CONVERSATION_ID, conversationId)
                 }
             }.apply {
                 instant = this
@@ -134,7 +135,11 @@ class UserBottomSheetDialogFragment : MixinScrollableBottomSheetDialogFragment()
 
     private lateinit var user: User
 
-    private lateinit var conversationId: String
+    // bot need conversation id
+    private var botConversationId: String? = null
+    private val conversationId by lazy{
+        generateConversationId(Session.getAccountId()!!, user.userId)
+    }
     private var creator: User? = null
 
     @Inject
@@ -156,7 +161,7 @@ class UserBottomSheetDialogFragment : MixinScrollableBottomSheetDialogFragment()
     override fun setupDialog(dialog: Dialog, style: Int) {
         super.setupDialog(dialog, style)
         user = requireArguments().getParcelable(ARGS_USER)!!
-        conversationId = requireArguments().getString(ARGS_CONVERSATION_ID)!!
+        botConversationId = requireArguments().getString(ARGS_CONVERSATION_ID)
         binding.title.rightIv.setOnClickListener { dismiss() }
         binding.avatar.setOnClickListener {
             if (!isAdded) return@setOnClickListener
@@ -220,7 +225,7 @@ class UserBottomSheetDialogFragment : MixinScrollableBottomSheetDialogFragment()
                 return@setOnClickListener
             }
             context?.let { ctx ->
-                if (MixinApplication.conversationId == null || generateConversationId(user.userId, Session.getAccountId()!!) != MixinApplication.conversationId) {
+                if (MixinApplication.conversationId == null || conversationId != MixinApplication.conversationId) {
                     RxBus.publish(BotCloseEvent())
                     ConversationActivity.showAndClear(ctx, null, user.userId)
                     dismiss()
@@ -761,8 +766,7 @@ class UserBottomSheetDialogFragment : MixinScrollableBottomSheetDialogFragment()
                     .autoDispose(stopScope).subscribe {
                         dismiss()
                         RxBus.publish(BotCloseEvent())
-                        WebActivity
-                            .show(requireActivity(), app.homeUri, conversationId, app)
+                        WebActivity.show(requireActivity(), app.homeUri, botConversationId, app)
                         dismiss()
                     }
                 bottomViewModel.findUserById(app.creatorId)
@@ -967,7 +971,7 @@ class UserBottomSheetDialogFragment : MixinScrollableBottomSheetDialogFragment()
                     ): Boolean {
                         user.fullName?.let {
                             val conversationId = conversationId
-                            one.mixin.android.util.addPinShortcut(
+                            addPinShortcut(
                                 requireContext(),
                                 conversationId,
                                 it,

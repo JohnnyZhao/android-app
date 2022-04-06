@@ -18,6 +18,7 @@ import one.mixin.android.event.ProgressEvent
 import one.mixin.android.extension.getStackTraceString
 import one.mixin.android.extension.toast
 import one.mixin.android.extension.within24Hours
+import one.mixin.android.extension.worthRetrying
 import one.mixin.android.util.GsonHelper
 import one.mixin.android.util.reportException
 import one.mixin.android.vo.AttachmentExtra
@@ -118,9 +119,13 @@ class SendTranscriptAttachmentMessageJob(
             },
             {
                 Timber.e("upload attachment error, ${it.getStackTraceString()}")
-                reportException(it)
-                removeJob()
-                transcriptMessageDao.updateMediaStatus(transcriptMessage.transcriptId, transcriptMessage.messageId, MediaStatus.CANCELED.name)
+                if (it.worthRetrying()) {
+                    throw it
+                } else {
+                    reportException(it)
+                    removeJob()
+                    transcriptMessageDao.updateMediaStatus(transcriptMessage.transcriptId, transcriptMessage.messageId, MediaStatus.CANCELED.name)
+                }
             }
         )
     }
@@ -171,8 +176,12 @@ class SendTranscriptAttachmentMessageJob(
                     toast(R.string.upload_timeout)
                 }
             }
-            removeJob()
-            reportException(e)
+            if (e.worthRetrying()) {
+                throw e
+            } else {
+                removeJob()
+                reportException(e)
+            }
             return false
         }
         if (isCancelled) {

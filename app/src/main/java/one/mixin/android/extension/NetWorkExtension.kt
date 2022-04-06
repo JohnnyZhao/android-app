@@ -12,8 +12,16 @@ import one.mixin.android.Constants
 import one.mixin.android.Constants.Download.MOBILE_DEFAULT
 import one.mixin.android.Constants.Download.ROAMING_DEFAULT
 import one.mixin.android.Constants.Download.WIFI_DEFAULT
+import one.mixin.android.api.ClientErrorException
+import one.mixin.android.api.ExpiredTokenException
+import one.mixin.android.api.LocalJobException
+import one.mixin.android.api.NetworkException
+import one.mixin.android.api.ServerErrorException
+import one.mixin.android.api.WebSocketException
 import one.mixin.android.util.PropertyHelper
 import timber.log.Timber
+import java.io.IOException
+import java.net.SocketTimeoutException
 
 val autoDownloadPhoto: suspend (value: Int) -> Boolean = {
     it.or(0x110) == 0x111
@@ -108,4 +116,28 @@ fun Context.networkType(): String {
 fun Context.getNetworkOperatorName(): String {
     val manager = getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
     return manager.networkOperatorName
+}
+
+fun Throwable.worthRetrying(): Boolean {
+    if (this is SocketTimeoutException) {
+        return true
+    }
+    if (this is IOException) {
+        return true
+    }
+    if (this is InterruptedException) {
+        return true
+    }
+    return (this as? ServerErrorException)?.shouldRetry()
+        ?: (this as? ExpiredTokenException)?.shouldRetry()
+        ?: (
+            (this as? ClientErrorException)?.shouldRetry()
+                ?: (
+                    (this as? NetworkException)?.shouldRetry()
+                        ?: (
+                            (this as? WebSocketException)?.shouldRetry()
+                                ?: ((this as? LocalJobException)?.shouldRetry() ?: false)
+                            )
+                    )
+            )
 }

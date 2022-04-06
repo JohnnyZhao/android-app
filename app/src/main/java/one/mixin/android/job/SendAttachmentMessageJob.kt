@@ -17,6 +17,7 @@ import one.mixin.android.event.ProgressEvent.Companion.loadingEvent
 import one.mixin.android.extension.base64Encode
 import one.mixin.android.extension.getStackTraceString
 import one.mixin.android.extension.toast
+import one.mixin.android.extension.worthRetrying
 import one.mixin.android.job.MixinJobManager.Companion.attachmentProcess
 import one.mixin.android.util.GsonHelper
 import one.mixin.android.util.reportException
@@ -109,10 +110,14 @@ class SendAttachmentMessageJob(
             },
             {
                 Timber.e("upload attachment error, ${it.getStackTraceString()}")
-                reportException(it)
-                messageDao.updateMediaStatus(MediaStatus.CANCELED.name, message.id)
-                attachmentProcess.remove(message.id)
-                removeJob()
+                if (it.worthRetrying()) {
+                    throw it
+                } else {
+                    reportException(it)
+                    messageDao.updateMediaStatus(MediaStatus.CANCELED.name, message.id)
+                    attachmentProcess.remove(message.id)
+                    removeJob()
+                }
             }
         )
     }
@@ -164,10 +169,14 @@ class SendAttachmentMessageJob(
                     toast(R.string.upload_timeout)
                 }
             }
-            messageDao.updateMediaStatus(MediaStatus.CANCELED.name, message.id)
-            attachmentProcess.remove(message.id)
-            removeJob()
-            reportException(e)
+            if (e.worthRetrying()) {
+                throw e
+            } else {
+                messageDao.updateMediaStatus(MediaStatus.CANCELED.name, message.id)
+                attachmentProcess.remove(message.id)
+                removeJob()
+                reportException(e)
+            }
             return false
         }
         if (isCancelled) {

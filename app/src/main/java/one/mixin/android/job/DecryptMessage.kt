@@ -445,14 +445,18 @@ class DecryptMessage(private val lifecycleScope: CoroutineScope) : Injector() {
             } else if (plainData.action == PlainDataAction.ACKNOWLEDGE_MESSAGE_RECEIPTS.name) {
                 plainData.ackMessages?.let {
                     val updateMessageList = arrayListOf<String>()
+                    val updateExpiredMessageList = arrayListOf<Pair<String, Long>>()
                     for (m in it) {
                         if (m.status != MessageStatus.READ.name && m.status != MessageMentionStatus.MENTION_READ.name) {
                             continue
                         }
+                        if (m.expireAt != null) {
+                            updateExpiredMessageList.add(Pair(m.messageId, m.expireAt))
+                        }
                         if (m.status == MessageStatus.READ.name) {
-                            updateMessageList.add(m.message_id)
+                            updateMessageList.add(m.messageId)
                         } else if (m.status == MessageMentionStatus.MENTION_READ.name) {
-                            messageMentionDao.markMentionRead(m.message_id)
+                            messageMentionDao.markMentionRead(m.messageId)
                         }
                     }
                     if (updateMessageList.isNotEmpty()) {
@@ -462,6 +466,11 @@ class DecryptMessage(private val lifecycleScope: CoroutineScope) : Injector() {
                             remoteMessageStatusDao.updateConversationUnseen(cId)
                             InvalidateFlow.emit(cId)
                             notificationManager.cancel(cId.hashCode())
+                        }
+                    }
+                    if (updateExpiredMessageList.isNotEmpty()) {
+                        updateExpiredMessageList.forEach {
+                            expiredMessageDao.updateExpiredMessage(it.first, it.second)
                         }
                     }
                 }

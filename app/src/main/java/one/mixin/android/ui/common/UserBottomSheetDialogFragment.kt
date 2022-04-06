@@ -137,7 +137,7 @@ class UserBottomSheetDialogFragment : MixinScrollableBottomSheetDialogFragment()
 
     // bot need conversation id
     private var botConversationId: String? = null
-    private val conversationId by lazy{
+    private val conversationId by lazy {
         generateConversationId(Session.getAccountId()!!, user.userId)
     }
     private var creator: User? = null

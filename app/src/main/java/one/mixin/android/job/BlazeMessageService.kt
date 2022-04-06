@@ -146,9 +146,10 @@ class BlazeMessageService : LifecycleService(), NetworkEventProvider.Listener, C
             disposable = RxBus.listen(ExpiredEvent::class.java).observeOn(Schedulers.io())
                 .subscribe { event ->
                     val currentTime = currentTimeSeconds()
-                    database.expiredMessageDao().markRead(event.messageId, currentTime)
-                    lifecycleScope.launch(Dispatchers.IO) {
-                        startExpiredJob(event.expireIn + currentTime)
+                    if (database.expiredMessageDao().markRead(event.messageId, currentTime) > 0) {
+                        lifecycleScope.launch(Dispatchers.IO) {
+                            startExpiredJob(event.expireIn + currentTime)
+                        }
                     }
                 }
         }
@@ -413,7 +414,7 @@ class BlazeMessageService : LifecycleService(), NetworkEventProvider.Listener, C
         list.map { msg ->
             createAckJob(
                 ACKNOWLEDGE_MESSAGE_RECEIPTS,
-                BlazeAckMessage(msg.messageId, MessageStatus.READ.name)
+                BlazeAckMessage(msg.messageId, MessageStatus.READ.name, msg.expireAt)
             )
         }.apply {
             database.jobDao().insertList(this)
@@ -426,7 +427,7 @@ class BlazeMessageService : LifecycleService(), NetworkEventProvider.Listener, C
                 database.jobDao().insertList(jobs)
             }
         }
-        remoteMessageStatusDao.deleteList(list)
+        remoteMessageStatusDao.deleteByMessageIds(list.map { it.messageId })
         return if (list.size >= MARK_REMOTE_LIMIT) {
             processStatus()
         } else {

@@ -19,7 +19,6 @@ import io.reactivex.disposables.Disposable
 import io.reactivex.schedulers.Schedulers
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import one.mixin.android.Constants.DB_EXPIRED_LIMIT
@@ -449,10 +448,10 @@ class BlazeMessageService : LifecycleService(), NetworkEventProvider.Listener, C
         }
     }
 
-    private suspend fun startExpiredJob(expiredTime: Long) {
+    private fun startExpiredJob(expiredTime: Long) {
         val nextExpirationTime = this.nextExpirationTime
         if (expiredJob?.isActive == true && nextExpirationTime != null && expiredTime < nextExpirationTime) {
-            expiredJob?.cancelAndJoin()
+            expiredJob?.cancel()
             runExpiredJob()
         } else {
             runExpiredJob()

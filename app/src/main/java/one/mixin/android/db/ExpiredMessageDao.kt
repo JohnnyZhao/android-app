@@ -1,11 +1,16 @@
 package one.mixin.android.db
 
 import androidx.room.Dao
+import androidx.room.Insert
+import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import one.mixin.android.vo.ExpiredMessage
 
 @Dao
 interface ExpiredMessageDao : BaseDao<ExpiredMessage> {
+    @Insert(onConflict = OnConflictStrategy.ABORT)
+    fun insert(expiredMessage: ExpiredMessage)
+
     @Query("SELECT * FROM expired_messages WHERE expire_at <= :currentTime ORDER BY expire_at ASC LIMIT :limit")
     suspend fun getExpiredMessages(currentTime: Long, limit: Int): List<ExpiredMessage>
 
@@ -23,4 +28,5 @@ interface ExpiredMessageDao : BaseDao<ExpiredMessage> {
 
     @Query("DELETE FROM expired_messages WHERE message_id = :messageId")
     fun deleteByMessageId(messageId: String)
+
 }

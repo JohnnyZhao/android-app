@@ -95,6 +95,15 @@ open class SendMessageJob(
                     InvalidateFlow.emit(message.conversationId)
                     MessageFts4Helper.insertOrReplaceMessageFts4(message, message.name)
                 }
+                conversation.expireIn?.let { e ->
+                    expiredMessageDao.insert(
+                        ExpiredMessage(
+                            message.id,
+                            e,
+                            System.currentTimeMillis() / 1000 + e
+                        )
+                    )
+                }
             }
         } else {
             reportException(Throwable("Insert failed, no conversation $alreadyExistMessage"))

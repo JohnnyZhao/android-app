@@ -247,3 +247,5 @@ fun String.getRelativeTimeSpan(): String {
 }
 
 fun currentTimeSeconds() = System.currentTimeMillis() / 1000
+
+fun String.toSeconds() = ZonedDateTime.parse(this).toOffsetDateTime().toEpochSecond()

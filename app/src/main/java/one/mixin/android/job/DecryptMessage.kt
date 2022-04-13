@@ -30,6 +30,7 @@ import one.mixin.android.extension.autoDownloadDocument
 import one.mixin.android.extension.autoDownloadPhoto
 import one.mixin.android.extension.autoDownloadVideo
 import one.mixin.android.extension.base64Encode
+import one.mixin.android.extension.currentTimeSeconds
 import one.mixin.android.extension.decodeBase64
 import one.mixin.android.extension.defaultSharedPreferences
 import one.mixin.android.extension.findLastUrl
@@ -40,6 +41,7 @@ import one.mixin.android.extension.nowInUtc
 import one.mixin.android.extension.postOptimize
 import one.mixin.android.extension.putString
 import one.mixin.android.extension.toByteArray
+import one.mixin.android.extension.toSeconds
 import one.mixin.android.job.BaseJob.Companion.PRIORITY_SEND_ATTACHMENT_MESSAGE
 import one.mixin.android.session.Session
 import one.mixin.android.ui.web.replaceApp
@@ -174,7 +176,7 @@ class DecryptMessage(private val lifecycleScope: CoroutineScope) : Injector() {
                         MessageStatus.UNKNOWN.name
                     )
                     syncConversation(data)
-                    database.insertAndNotifyConversation(message)
+                    insertMessage(message, data)
                 }
                 updateRemoteMessageStatus(data.messageId, MessageStatus.DELIVERED)
                 return
@@ -237,7 +239,7 @@ class DecryptMessage(private val lifecycleScope: CoroutineScope) : Injector() {
                 expiredMessageDao.insert(ExpiredMessage(data.messageId, expireIn, null))
             }
         }
-        database.insertAndNotifyConversation(message)
+        insertMessage(message, data)
         updateRemoteMessageStatus(data.messageId, MessageStatus.DELIVERED)
         generateNotification(message, data)
     }
@@ -284,7 +286,7 @@ class DecryptMessage(private val lifecycleScope: CoroutineScope) : Injector() {
                 expiredMessageDao.insert(ExpiredMessage(data.messageId, expireIn, null))
             }
         }
-        database.insertAndNotifyConversation(message)
+        insertMessage(message, data)
         updateRemoteMessageStatus(data.messageId, MessageStatus.DELIVERED)
         generateNotification(message, data)
     }
@@ -591,7 +593,6 @@ class DecryptMessage(private val lifecycleScope: CoroutineScope) : Injector() {
                         expiredMessageDao.insert(ExpiredMessage(data.messageId, expireIn, null))
                     }
                 }
-                database.insertAndNotifyConversation(message)
                 MessageFts4Helper.insertOrReplaceMessageFts4(message)
                 val userMap = mentions?.associate { it.identityNumber to it.fullName }
                 generateNotification(message, data, userMap, quoteMe || mentionMe)
@@ -613,7 +614,7 @@ class DecryptMessage(private val lifecycleScope: CoroutineScope) : Injector() {
                         expiredMessageDao.insert(ExpiredMessage(data.messageId, expireIn, null))
                     }
                 }
-                database.insertAndNotifyConversation(message)
+                insertMessage(message, data)
                 MessageFts4Helper.insertOrReplaceMessageFts4(message)
                 generateNotification(message, data)
             }
@@ -626,7 +627,7 @@ class DecryptMessage(private val lifecycleScope: CoroutineScope) : Injector() {
                             expiredMessageDao.insert(ExpiredMessage(data.messageId, expireIn, null))
                         }
                     }
-                    database.insertAndNotifyConversation(message)
+                    insertMessage(message, data)
                     generateNotification(message, data)
                 }
             }
@@ -652,7 +653,7 @@ class DecryptMessage(private val lifecycleScope: CoroutineScope) : Injector() {
                         expiredMessageDao.insert(ExpiredMessage(data.messageId, expireIn, null))
                     }
                 }
-                database.insertAndNotifyConversation(message)
+                insertMessage(message, data)
                 lifecycleScope.launch {
                     MixinApplication.appContext.autoDownload(autoDownloadPhoto) {
                         jobManager.addJobInBackground(AttachmentDownloadJob(message))
@@ -685,7 +686,7 @@ class DecryptMessage(private val lifecycleScope: CoroutineScope) : Injector() {
                         expiredMessageDao.insert(ExpiredMessage(data.messageId, expireIn, null))
                     }
                 }
-                database.insertAndNotifyConversation(message)
+                insertMessage(message, data)
                 lifecycleScope.launch {
                     MixinApplication.appContext.autoDownload(autoDownloadVideo) {
                         jobManager.addJobInBackground(AttachmentDownloadJob(message))
@@ -712,7 +713,7 @@ class DecryptMessage(private val lifecycleScope: CoroutineScope) : Injector() {
                         expiredMessageDao.insert(ExpiredMessage(data.messageId, expireIn, null))
                     }
                 }
-                database.insertAndNotifyConversation(message)
+                insertMessage(message, data)
                 MessageFts4Helper.insertOrReplaceMessageFts4(message)
                 lifecycleScope.launch {
                     MixinApplication.appContext.autoDownload(autoDownloadDocument) {
@@ -739,7 +740,7 @@ class DecryptMessage(private val lifecycleScope: CoroutineScope) : Injector() {
                         expiredMessageDao.insert(ExpiredMessage(data.messageId, expireIn, null))
                     }
                 }
-                database.insertAndNotifyConversation(message)
+                insertMessage(message, data)
                 jobManager.addJobInBackground(AttachmentDownloadJob(message))
                 generateNotification(message, data)
             }
@@ -775,7 +776,7 @@ class DecryptMessage(private val lifecycleScope: CoroutineScope) : Injector() {
                         expiredMessageDao.insert(ExpiredMessage(data.messageId, expireIn, null))
                     }
                 }
-                database.insertAndNotifyConversation(message)
+                insertMessage(message, data)
                 generateNotification(message, data)
             }
             data.category.endsWith("_CONTACT") -> {
@@ -798,7 +799,7 @@ class DecryptMessage(private val lifecycleScope: CoroutineScope) : Injector() {
                         expiredMessageDao.insert(ExpiredMessage(data.messageId, expireIn, null))
                     }
                 }
-                database.insertAndNotifyConversation(message)
+                insertMessage(message, data)
                 val fullName = user?.fullName
                 if (!fullName.isNullOrBlank()) {
                     MessageFts4Helper.insertOrReplaceMessageFts4(message, fullName)
@@ -825,7 +826,7 @@ class DecryptMessage(private val lifecycleScope: CoroutineScope) : Injector() {
                         expiredMessageDao.insert(ExpiredMessage(data.messageId, expireIn, null))
                     }
                 }
-                database.insertAndNotifyConversation(message)
+                insertMessage(message, data)
                 generateNotification(message, data)
             }
             data.category.endsWith("_TRANSCRIPT") -> {
@@ -838,7 +839,7 @@ class DecryptMessage(private val lifecycleScope: CoroutineScope) : Injector() {
                         expiredMessageDao.insert(ExpiredMessage(data.messageId, expireIn, null))
                     }
                 }
-                database.insertAndNotifyConversation(message)
+                insertMessage(message, data)
                 generateNotification(message, data)
             }
         }
@@ -1004,7 +1005,7 @@ class DecryptMessage(private val lifecycleScope: CoroutineScope) : Injector() {
             snapshotDao.deletePendingSnapshotByHash(it)
         }
         snapshotDao.insert(snapshot)
-        database.insertAndNotifyConversation(message)
+        insertMessage(message, data)
         jobManager.addJobInBackground(RefreshAssetsJob(snapshot.assetId))
 
         if (snapshot.type == SnapshotType.transfer.name && snapshot.amount.toFloat() > 0) {
@@ -1062,7 +1063,7 @@ class DecryptMessage(private val lifecycleScope: CoroutineScope) : Injector() {
         } else if (systemMessage.action == SystemConversationAction.EXPIRE.name) {
             jobManager.addJobInBackground(RefreshConversationJob(data.conversationId))
         }
-        database.insertAndNotifyConversation(message)
+        insertMessage(message, data)
     }
 
     private fun processSystemUserMessage(systemMessage: SystemUserMessagePayload) {
@@ -1403,5 +1404,24 @@ class DecryptMessage(private val lifecycleScope: CoroutineScope) : Injector() {
             return
         }
         NotificationGenerator.generate(lifecycleScope, message, userMap, force, data.silent ?: false)
+    }
+
+    private fun insertMessage(message: Message, data: BlazeMessageData, userMap: Map<String, String>? = null, force: Boolean = false) {
+        val expireIn = data.expireIn
+        if (expireIn != null && expireIn > 0) {
+            if (data.userId == Session.getAccountId()) {
+                val expiredAt = data.createdAt.toSeconds() + expireIn
+                if (expiredAt <= currentTimeSeconds()) {
+                    // No need to insert message
+                    return
+                } else {
+                    expiredMessageDao.insert(ExpiredMessage(data.messageId, expireIn, expiredAt))
+                }
+            } else {
+                expiredMessageDao.insert(ExpiredMessage(data.messageId, expireIn, null))
+            }
+        }
+        database.insertAndNotifyConversation(message)
+        generateNotification(message, data, userMap, force)
     }
 }

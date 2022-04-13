@@ -5,26 +5,21 @@ import androidx.paging.DataSource
 import androidx.room.Dao
 import androidx.room.Query
 import androidx.room.RoomWarnings
-import androidx.room.Transaction
 import one.mixin.android.db.contants.AUDIOS
 import one.mixin.android.db.contants.DATA
 import one.mixin.android.db.contants.IMAGES
 import one.mixin.android.db.contants.LIVES
 import one.mixin.android.db.contants.TRANSCRIPTS
 import one.mixin.android.db.contants.VIDEOS
-import one.mixin.android.session.Session
 import one.mixin.android.ui.player.MessageIdIdAndMediaStatus
 import one.mixin.android.util.QueryMessage
-import one.mixin.android.util.chat.InvalidateFlow
 import one.mixin.android.vo.AttachmentMigration
 import one.mixin.android.vo.HyperlinkItem
 import one.mixin.android.vo.MediaMessageMinimal
 import one.mixin.android.vo.Message
 import one.mixin.android.vo.MessageItem
 import one.mixin.android.vo.MessageMinimal
-import one.mixin.android.vo.MessageStatus
 import one.mixin.android.vo.QuoteMessageItem
-import one.mixin.android.vo.RemoteMessageStatus
 import one.mixin.android.vo.SearchMessageItem
 
 @Dao
@@ -550,5 +545,4 @@ interface MessageDao : BaseDao<Message> {
 
     @Query("DELETE FROM messages WHERE id IN (SELECT id FROM messages WHERE conversation_id = :conversationId LIMIT :limit)")
     suspend fun deleteMessageByConversationId(conversationId: String, limit: Int)
-
 }

@@ -1,8 +1,6 @@
 package one.mixin.android.db
 
-import one.mixin.android.session.Session
 import one.mixin.android.util.chat.InvalidateFlow
-import one.mixin.android.Constants.DB_DELETE_LIMIT
 import one.mixin.android.vo.App
 import one.mixin.android.vo.Circle
 import one.mixin.android.vo.CircleConversation
@@ -177,7 +175,7 @@ fun MixinDatabase.deleteMessageById(messageId: String) {
         messageDao().deleteMessageById(messageId)
         messageFts4Dao().deleteByMessageId(messageId)
         remoteMessageStatusDao().deleteByMessageId(messageId)
-        expiredMessageDao().deleteByMessageId(id)
+        expiredMessageDao().deleteByMessageId(messageId)
     }
 }
 

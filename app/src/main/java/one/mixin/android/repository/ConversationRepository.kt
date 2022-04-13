@@ -38,7 +38,6 @@ import one.mixin.android.db.ParticipantSessionDao
 import one.mixin.android.db.PinMessageDao
 import one.mixin.android.db.RemoteMessageStatusDao
 import one.mixin.android.db.TranscriptMessageDao
-import one.mixin.android.db.deleteMessage
 import one.mixin.android.db.deleteMessageByConversationId
 import one.mixin.android.db.deleteMessageById
 import one.mixin.android.db.insertNoReplace

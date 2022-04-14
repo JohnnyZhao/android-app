@@ -686,7 +686,9 @@ private fun getDirSize(dir: File): Long? {
             Environment.getRootDirectory()
         )
         val br = BufferedReader(InputStreamReader(du.inputStream))
-        return Scanner(br.readLine()).nextLong().apply {
+        val resultLine = br.readLine()
+        Timber.e("$dir $resultLine")
+        return Scanner(resultLine).nextLong().apply {
             Timber.e("$dir: $this")
         }
     } catch (e: Exception) {

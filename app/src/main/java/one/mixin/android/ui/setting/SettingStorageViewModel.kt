@@ -14,7 +14,10 @@ import one.mixin.android.Constants.Storage.IMAGE
 import one.mixin.android.Constants.Storage.TRANSCRIPT
 import one.mixin.android.Constants.Storage.VIDEO
 import one.mixin.android.MixinApplication
+import one.mixin.android.extension.FileSizeUnit
 import one.mixin.android.extension.defaultSharedPreferences
+import one.mixin.android.extension.dirSize
+import one.mixin.android.extension.fileSize
 import one.mixin.android.extension.generateConversationPath
 import one.mixin.android.extension.getAudioPath
 import one.mixin.android.extension.getConversationAudioPath
@@ -23,9 +26,12 @@ import one.mixin.android.extension.getConversationImagePath
 import one.mixin.android.extension.getConversationMediaSize
 import one.mixin.android.extension.getConversationVideoPath
 import one.mixin.android.extension.getDocumentPath
+import one.mixin.android.extension.getFileNameNoEx
 import one.mixin.android.extension.getImagePath
+import one.mixin.android.extension.getMediaPath
 import one.mixin.android.extension.getStorageUsageByConversationAndType
 import one.mixin.android.extension.getVideoPath
+import one.mixin.android.extension.isUUID
 import one.mixin.android.job.MixinJobManager
 import one.mixin.android.job.TranscriptDeleteJob
 import one.mixin.android.repository.ConversationRepository
@@ -33,8 +39,10 @@ import one.mixin.android.util.SINGLE_DB_THREAD
 import one.mixin.android.vo.MessageCategory
 import one.mixin.android.vo.StorageUsage
 import one.mixin.android.vo.absolutePath
+import timber.log.Timber
 import java.io.File
 import javax.inject.Inject
+import kotlin.math.abs
 
 @HiltViewModel
 class SettingStorageViewModel
@@ -73,7 +81,37 @@ internal constructor(
             conversationStorageUsage.mediaSize != 0L && conversationStorageUsage.conversationId.isNotEmpty()
         }.sortedByDescending { conversationStorageUsage ->
             conversationStorageUsage.mediaSize
-        }.toList()
+        }.toList().apply {
+            val list = this
+            viewModelScope.launch {
+                val sum = list.sumOf { it.mediaSize }
+                Timber.e("Local data: ${sum.fileSize(FileSizeUnit.KB)}")
+                val mediaPath = context.getMediaPath()
+                mediaPath?.let { m ->
+                    val pathSize = m.dirSize() ?: 0
+                    Timber.e("Media data: ${pathSize.fileSize(FileSizeUnit.KB)}")
+                    Timber.e("Residual data: ${abs(pathSize - sum).fileSize(FileSizeUnit.KB)}")
+                }
+                var size = 0L
+                mediaPath?.listFiles()?.forEach { dir ->
+                    dir.listFiles()?.forEach {
+                        it.listFiles()?.forEach { file ->
+                            if (file.isFile) {
+                                val name = file.name.getFileNameNoEx()
+                                // Timber.e(name)
+                                if (name.isUUID() && conversationRepository.exists(name) == null) {
+                                    size += file.length()
+                                    Timber.e("delete ${file.absolutePath} ${size.fileSize()}")
+                                }
+                            } else {
+                                // Timber.e("${file.absolutePath} dir")
+                            }
+                        }
+                    }
+                }
+                Timber.e("delete total: ${size.fileSize()}")
+            }
+        }
     }
 
     fun clear(conversationId: String, type: String) {

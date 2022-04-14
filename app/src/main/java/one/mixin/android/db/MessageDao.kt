@@ -622,4 +622,7 @@ interface MessageDao : BaseDao<Message> {
 
     @Query("SELECT id FROM messages LIMIT 1")
     suspend fun hasMessage(): String?
+
+    @Query("SELECT id FROM messages WHERE id = :messageId")
+    suspend fun exists(messageId: String): String?
 }

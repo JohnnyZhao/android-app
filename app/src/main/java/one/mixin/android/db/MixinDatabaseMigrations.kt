@@ -309,6 +309,12 @@ class MixinDatabaseMigrations private constructor() {
             override fun migrate(database: SupportSQLiteDatabase) {
                 database.execSQL("DROP TABLE IF EXISTS `remote_messages_status`")
                 database.execSQL("DROP INDEX IF EXISTS `index_remote_messages_status_conversation_id_status`")
+                database.execSQL(
+                    """
+                    UPDATE conversations SET unseen_message_count = (SELECT count(1) FROM messages m WHERE m.conversation_id = :conversationId 
+                    AND m.status IN ('SENT', 'DELIVERED') AND m.user_id != :userId) WHERE conversation_id = (SELECT conversation_id FROM conversations)
+                """
+                )
             }
         }
 

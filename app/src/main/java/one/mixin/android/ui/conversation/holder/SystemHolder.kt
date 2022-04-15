@@ -47,7 +47,7 @@ class SystemHolder constructor(val binding: ItemChatSystemBinding) : BaseViewHol
                     String.format(
                         getText(R.string.chat_group_create),
                         if (id == messageItem.userId) {
-                            getText(R.string.you)
+                            getText(R.string.You)
                         } else {
                             messageItem.userFullName
                         },
@@ -59,12 +59,12 @@ class SystemHolder constructor(val binding: ItemChatSystemBinding) : BaseViewHol
                     String.format(
                         getText(R.string.chat_group_add),
                         if (id == messageItem.userId) {
-                            getText(R.string.you)
+                            getText(R.string.You)
                         } else {
                             messageItem.userFullName
                         },
                         if (id == messageItem.participantUserId) {
-                            getText(R.string.chat_you)
+                            getText(R.string.you)
                         } else {
                             messageItem.participantFullName
                         }
@@ -75,12 +75,12 @@ class SystemHolder constructor(val binding: ItemChatSystemBinding) : BaseViewHol
                     String.format(
                         getText(R.string.chat_group_remove),
                         if (id == messageItem.userId) {
-                            getText(R.string.you)
+                            getText(R.string.You)
                         } else {
                             messageItem.userFullName
                         },
                         if (id == messageItem.participantUserId) {
-                            getText(R.string.chat_you)
+                            getText(R.string.you)
                         } else {
                             messageItem.participantFullName
                         }
@@ -91,7 +91,7 @@ class SystemHolder constructor(val binding: ItemChatSystemBinding) : BaseViewHol
                     String.format(
                         getText(R.string.chat_group_join),
                         if (id == messageItem.participantUserId) {
-                            getText(R.string.you)
+                            getText(R.string.You)
                         } else {
                             messageItem.participantFullName
                         }
@@ -102,7 +102,7 @@ class SystemHolder constructor(val binding: ItemChatSystemBinding) : BaseViewHol
                     String.format(
                         getText(R.string.chat_group_exit),
                         if (id == messageItem.participantUserId) {
-                            getText(R.string.you)
+                            getText(R.string.You)
                         } else {
                             messageItem.participantFullName
                         }

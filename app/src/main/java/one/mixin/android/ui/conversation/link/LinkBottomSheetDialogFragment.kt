@@ -774,7 +774,7 @@ class LinkBottomSheetDialogFragment : BottomSheetDialogFragment() {
         return linkViewModel.findAssetItemById(assetId)
     }
 
-    private fun showError(@StringRes errorRes: Int = R.string.link_error) {
+    private fun showError(@StringRes errorRes: Int = R.string.This_link_is_invalid) {
         binding.apply {
             linkErrorInfo.setText(errorRes)
             linkLoading.visibility = GONE

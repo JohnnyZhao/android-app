@@ -134,7 +134,7 @@ class AppAuthActivity : BaseActivity() {
         }
 
         override fun onAuthenticationFailed() {
-            refreshSwirl(getString(R.string.not_recognized), false)
+            refreshSwirl(getString(R.string.Not_recognized), false)
         }
 
         override fun onAuthenticationSucceeded(result: FingerprintManagerCompat.AuthenticationResult?) {

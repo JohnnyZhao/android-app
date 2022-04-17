@@ -124,7 +124,7 @@ class LinkBottomSheetDialogFragment : BottomSheetDialogFragment() {
         }
     }
 
-    private fun getUserOrAppNotFoundTip(isApp: Boolean) = if (isApp) R.string.error_app_not_found else R.string.error_user_not_found
+    private fun getUserOrAppNotFoundTip(isApp: Boolean) = if (isApp) R.string.App_not_found else R.string.User_not_found
 
     @SuppressLint("RestrictedApi")
     override fun setupDialog(dialog: Dialog, style: Int) {
@@ -201,7 +201,7 @@ class LinkBottomSheetDialogFragment : BottomSheetDialogFragment() {
                 segments[0]
             }
             if (!userId.isUUID()) {
-                toast(R.string.error_user_not_found)
+                toast(R.string.User_not_found)
                 dismiss()
             } else if (userId == Session.getAccountId()) {
                 toast(R.string.cant_transfer_self)
@@ -210,7 +210,7 @@ class LinkBottomSheetDialogFragment : BottomSheetDialogFragment() {
                 lifecycleScope.launch(errorHandler) {
                     val user = linkViewModel.refreshUser(userId)
                     if (user == null) {
-                        toast(R.string.error_user_not_found)
+                        toast(R.string.User_not_found)
                         dismiss()
                         return@launch
                     }
@@ -612,7 +612,7 @@ class LinkBottomSheetDialogFragment : BottomSheetDialogFragment() {
                     val user = linkViewModel.refreshUser(userId)
                     when {
                         user == null -> {
-                            showError(R.string.error_user_not_found)
+                            showError(R.string.User_not_found)
                         }
                         conversationId != generateConversationId(requireNotNull(Session.getAccountId()), userId) -> {
                             showError()
@@ -628,7 +628,7 @@ class LinkBottomSheetDialogFragment : BottomSheetDialogFragment() {
                         ConversationActivity.show(requireContext(), conversation.conversationId)
                         dismiss()
                     } else {
-                        showError(R.string.error_conversation_not_found)
+                        showError(R.string.Conversation_not_found)
                     }
                 }
             }

@@ -148,7 +148,7 @@ class ChatHistoryActivity : BaseActivity() {
                 if (isTranscript) {
                     R.string.Transcript
                 } else {
-                    R.string.Pinned_Message
+                    R.string.Pinned_Messages
                 }
             ),
             ""
@@ -645,7 +645,7 @@ class ChatHistoryActivity : BaseActivity() {
         if (MimeTypes.isAudio(messageItem.mediaMimeType)) {
             items.add(
                 BottomSheetItem(
-                    getString(R.string.action_save_to_music),
+                    getString(R.string.Save_to_Music),
                     {
                         checkWritePermissionAndSave(messageItem)
                         bottomSheet?.dismiss()
@@ -657,7 +657,7 @@ class ChatHistoryActivity : BaseActivity() {
         ) {
             items.add(
                 BottomSheetItem(
-                    getString(R.string.action_save_to_gallery),
+                    getString(R.string.Save_to_Gallery),
                     {
                         checkWritePermissionAndSave(messageItem)
                         bottomSheet?.dismiss()
@@ -667,7 +667,7 @@ class ChatHistoryActivity : BaseActivity() {
         } else {
             items.add(
                 BottomSheetItem(
-                    getString(R.string.action_save_to_downloads),
+                    getString(R.string.Save_to_Downloads),
                     {
                         checkWritePermissionAndSave(messageItem)
                         bottomSheet?.dismiss()

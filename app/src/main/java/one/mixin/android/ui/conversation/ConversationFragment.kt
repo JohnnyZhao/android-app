@@ -665,7 +665,7 @@ class ConversationFragment() :
                 }
                 val path = messageItem.absolutePath()?.toUri()?.getFilePath()
                 if (path == null) {
-                    toast(R.string.File_does_not_exit)
+                    toast(R.string.File_does_not_exist)
                     return
                 }
                 val file = File(path)
@@ -680,7 +680,7 @@ class ConversationFragment() :
                         MediaPagerActivity.getOptions(requireActivity(), view)
                     )
                 } else {
-                    toast(R.string.File_does_not_exit)
+                    toast(R.string.File_does_not_exist)
                 }
             }
 
@@ -1560,7 +1560,7 @@ class ConversationFragment() :
                     if (action == PinAction.PIN) {
                         R.string.Message_pinned
                     } else {
-                        R.string.unpin_success
+                        R.string.Message_unpinned
                     }
                 )
                 closeTool()
@@ -1661,7 +1661,7 @@ class ConversationFragment() :
 
                 val logFile = FileLogTree.getLogFile()
                 if (logFile == null || logFile.length() <= 0) {
-                    toast(R.string.File_does_not_exit)
+                    toast(R.string.File_does_not_exist)
                     return@debugLongClick
                 }
                 val attachment = Attachment(logFile.toUri(), logFile.name, "text/plain", logFile.length())
@@ -2724,7 +2724,7 @@ class ConversationFragment() :
                         dialog.dismiss()
                     }.show()
             } else {
-                toast(R.string.File_does_not_exit)
+                toast(R.string.File_does_not_exist)
             }
         } else if (requestCode == REQUEST_LOCATION && resultCode == Activity.RESULT_OK) {
             val intent = data ?: return
@@ -3219,7 +3219,7 @@ class ConversationFragment() :
                     }
             }
             if (nonExistent) {
-                toast(R.string.File_does_not_exit)
+                toast(R.string.File_does_not_exist)
             } else if (messages.isNotEmpty()) {
                 getCombineForwardResult.launch(ArrayList(messages))
             }

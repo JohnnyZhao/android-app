@@ -226,7 +226,7 @@ class LinkBottomSheetDialogFragment : BottomSheetDialogFragment() {
 
             lifecycleScope.launch(errorHandler) {
                 if (!showTransfer(url)) {
-                    showError(R.string.bottom_sheet_invalid_payment)
+                    showError(R.string.Invalid_payment_link)
                 } else {
                     dismiss()
                 }
@@ -570,11 +570,11 @@ class LinkBottomSheetDialogFragment : BottomSheetDialogFragment() {
                                         showWithdrawalBottom(address, amount, asset, traceId, response.status, memo)
                                     },
                                     failureBlock = {
-                                        showError(R.string.bottom_sheet_invalid_payment)
+                                        showError(R.string.Invalid_payment_link)
                                         return@handleMixinResponse false
                                     },
                                     exceptionBlock = {
-                                        showError(R.string.bottom_sheet_check_payment_info)
+                                        showError(R.string.Checking_payment_info)
                                         return@handleMixinResponse false
                                     }
                                 )
@@ -727,7 +727,7 @@ class LinkBottomSheetDialogFragment : BottomSheetDialogFragment() {
     private suspend fun showTransferBottom(user: User, amount: String, asset: AssetItem, traceId: String, status: String, memo: String?) {
         val pair = linkViewModel.findLatestTrace(user.userId, null, null, amount, asset.assetId)
         if (pair.second) {
-            showError(getString(R.string.bottom_sheet_check_trace_failed))
+            showError(getString(R.string.check_trace_failed))
             return
         }
         val biometricItem = TransferBiometricItem(user, asset, amount, null, traceId, memo, status, pair.first)
@@ -737,7 +737,7 @@ class LinkBottomSheetDialogFragment : BottomSheetDialogFragment() {
     private suspend fun showWithdrawalBottom(address: Address, amount: String, asset: AssetItem, traceId: String, status: String, memo: String?) {
         val pair = linkViewModel.findLatestTrace(null, address.destination, address.tag, amount, asset.assetId)
         if (pair.second) {
-            showError(getString(R.string.bottom_sheet_check_trace_failed))
+            showError(getString(R.string.check_trace_failed))
             return
         }
         val biometricItem = WithdrawBiometricItem(

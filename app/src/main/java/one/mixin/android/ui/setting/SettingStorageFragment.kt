@@ -11,6 +11,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
 import androidx.appcompat.app.AlertDialog
+import androidx.appcompat.widget.PopupMenu
 import androidx.collection.ArraySet
 import androidx.core.view.isVisible
 import androidx.fragment.app.viewModels
@@ -75,7 +76,16 @@ class SettingStorageFragment : BaseFragment(R.layout.fragment_storage) {
             menuView.adapter = menuAdapter
             titleView.rightIb.setOnClickListener {
                 if (viewDestroyed()) return@setOnClickListener
-                jobManager.addJobInBackground(StorageCleanJob())
+                val popMenu = PopupMenu(requireActivity(), it)
+                popMenu.menuInflater.inflate(R.menu.deep_clean, popMenu.menu)
+                popMenu.setOnMenuItemClickListener { menu ->
+                    if (menu.itemId == R.id.clean) {
+                        jobManager.addJobInBackground(StorageCleanJob())
+                    }
+                    return@setOnMenuItemClickListener true
+                }
+                popMenu.show()
+
             }
         }
         lifecycleScope.launch {

@@ -4,14 +4,12 @@ import com.birbit.android.jobqueue.Params
 import kotlinx.coroutines.runBlocking
 import one.mixin.android.MixinApplication
 import one.mixin.android.R
-import one.mixin.android.extension.copy
 import one.mixin.android.extension.fileSize
 import one.mixin.android.extension.getFileNameNoEx
 import one.mixin.android.extension.getMediaPath
 import one.mixin.android.extension.isUUID
 import one.mixin.android.util.clear.CleanNotification
 import timber.log.Timber
-import java.io.File
 
 class StorageCleanJob :
     BaseJob(Params(PRIORITY_UI_HIGH).groupBy(GROUP_ID).requireNetwork().persist()) {
@@ -29,7 +27,7 @@ class StorageCleanJob :
         var size = 0L
         CleanNotification.show()
         mediaPath?.listFiles()?.forEach { parentDir ->
-            parentDir.listFiles()?.forEach { dir->
+            parentDir.listFiles()?.forEach { dir ->
                 dir.listFiles()?.forEach { file ->
                     if (file.isFile) {
                         val name = file.name.getFileNameNoEx()
@@ -37,7 +35,7 @@ class StorageCleanJob :
                             size += file.length()
                             file.delete()
                             Timber.e("delete ${file.absolutePath} ${size.fileSize()}")
-                            CleanNotification.show(MixinApplication.appContext.getString(R.string.deep_cleaning_deleted,size.fileSize()))
+                            CleanNotification.show(MixinApplication.appContext.getString(R.string.deep_cleaning_deleted, size.fileSize()))
                         }
                     }
                 }

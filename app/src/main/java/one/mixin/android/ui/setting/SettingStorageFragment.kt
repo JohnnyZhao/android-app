@@ -85,7 +85,6 @@ class SettingStorageFragment : BaseFragment(R.layout.fragment_storage) {
                     return@setOnMenuItemClickListener true
                 }
                 popMenu.show()
-
             }
         }
         lifecycleScope.launch {

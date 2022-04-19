@@ -38,7 +38,7 @@ import one.mixin.android.extension.indeterminateProgressDialog
 import one.mixin.android.extension.toast
 import one.mixin.android.extension.viewDestroyed
 import one.mixin.android.job.MixinJobManager
-import one.mixin.android.job.StorageClearJob
+import one.mixin.android.job.StorageCleanJob
 import one.mixin.android.ui.common.BaseFragment
 import one.mixin.android.util.debug.measureTimeMillis
 import one.mixin.android.util.viewBinding
@@ -75,7 +75,7 @@ class SettingStorageFragment : BaseFragment(R.layout.fragment_storage) {
             menuView.adapter = menuAdapter
             titleView.rightIb.setOnClickListener {
                 if (viewDestroyed()) return@setOnClickListener
-                jobManager.addJobInBackground(StorageClearJob())
+                jobManager.addJobInBackground(StorageCleanJob())
             }
         }
         lifecycleScope.launch {

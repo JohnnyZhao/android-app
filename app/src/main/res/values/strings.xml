@@ -1109,4 +1109,8 @@
     <string name="sticker_store_remove_stickers">Remove Stickers</string>
     <string name="sticker_my">My Stickers</string>
     <string name="sticker_capital_none">NO STICKER</string>
+
+    <string name="deep_clean">Deep clean</string>
+    <string name="deep_cleaning">Cleaning up&#8230;</string>
+    <string name="deep_cleaning_deleted">Cleaning up, %1$s deleted</string>
 </resources>

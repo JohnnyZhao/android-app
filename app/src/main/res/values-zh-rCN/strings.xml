@@ -1074,4 +1074,8 @@
     <string name="sticker_store_remove_stickers">移除所有表情</string>
     <string name="sticker_my">我的表情</string>
     <string name="sticker_capital_none">还未添加任何表情</string>
+
+    <string name="deep_clean">深度清理</string>
+    <string name="deep_cleaning">正在清理&#8230;</string>
+    <string name="deep_cleaning_deleted">正在清理，已删除 %1$s</string>
 </resources>

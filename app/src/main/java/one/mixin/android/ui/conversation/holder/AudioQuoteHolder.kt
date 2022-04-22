@@ -258,7 +258,7 @@ class AudioQuoteHolder constructor(val binding: ItemChatAudioQuoteBinding) : Med
     }
 
     override fun onRead(messageItem: MessageItem) {
-        if (messageItem.expireIn != null && (messageItem.mediaStatus == MediaStatus.READ.name || messageItem.mediaStatus == MediaStatus.EXPIRED.name)) {
+        if (messageItem.expireIn != null) {
             RxBus.publish(ExpiredEvent(messageItem.messageId, messageItem.expireIn))
         }
     }

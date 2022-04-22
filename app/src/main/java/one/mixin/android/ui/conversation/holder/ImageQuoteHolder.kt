@@ -275,7 +275,7 @@ class ImageQuoteHolder constructor(val binding: ItemChatImageQuoteBinding) : Med
         chatJumpLayout(binding.chatJump, isMe, messageItem.expireIn, R.id.chat_msg_layout)
     }
     override fun onRead(messageItem: MessageItem) {
-        if (messageItem.expireIn != null && messageItem.mediaStatus == MediaStatus.DONE.name) {
+        if (messageItem.expireIn != null) {
             RxBus.publish(ExpiredEvent(messageItem.messageId, messageItem.expireIn))
         }
     }

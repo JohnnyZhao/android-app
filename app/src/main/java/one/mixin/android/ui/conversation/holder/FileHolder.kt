@@ -293,7 +293,7 @@ class FileHolder constructor(val binding: ItemChatFileBinding) : BaseViewHolder(
     }
 
     override fun onRead(messageItem: MessageItem) {
-        if (messageItem.expireIn != null && messageItem.mediaStatus == MediaStatus.DONE.name) {
+        if (messageItem.expireIn != null) {
             RxBus.publish(ExpiredEvent(messageItem.messageId, messageItem.expireIn))
         }
     }

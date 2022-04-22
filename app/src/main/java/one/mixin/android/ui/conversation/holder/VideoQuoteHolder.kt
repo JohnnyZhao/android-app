@@ -323,7 +323,7 @@ class VideoQuoteHolder constructor(val binding: ItemChatVideoQuoteBinding) :
     }
 
     override fun onRead(messageItem: MessageItem) {
-        if (messageItem.expireIn != null && messageItem.mediaStatus == MediaStatus.DONE.name) {
+        if (messageItem.expireIn != null) {
             RxBus.publish(ExpiredEvent(messageItem.messageId, messageItem.expireIn))
         }
     }

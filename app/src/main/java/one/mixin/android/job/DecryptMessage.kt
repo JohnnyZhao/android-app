@@ -405,7 +405,6 @@ class DecryptMessage(private val lifecycleScope: CoroutineScope) : Injector() {
                 messageDao.recallPinMessage(msg.id, msg.conversationId)
                 pinMessageDao.deleteByMessageId(msg.id)
                 messageMentionDao.deleteMessage(msg.id)
-                messagesFts4Dao.deleteByMessageId(msg.id)
                 remoteMessageStatusDao.deleteByMessageId(msg.id)
                 remoteMessageStatusDao.updateConversationUnseen(msg.conversationId)
                 if (msg.mediaUrl != null && mediaDownloaded(msg.mediaStatus)) {
@@ -426,6 +425,7 @@ class DecryptMessage(private val lifecycleScope: CoroutineScope) : Injector() {
                     notificationManager.cancel(msg.conversationId.hashCode())
                 }
                 InvalidateFlow.emit(msg.conversationId)
+                messagesFts4Dao.deleteByMessageId(msg.id)
             }
             updateRemoteMessageStatus(data.messageId, MessageStatus.READ)
             messageHistoryDao.insert(MessageHistory(data.messageId))
@@ -969,6 +969,9 @@ class DecryptMessage(private val lifecycleScope: CoroutineScope) : Injector() {
         )
         if (!transcripts.any { t -> t.isAttachment() }) {
             message.mediaStatus = MediaStatus.DONE.name
+        }
+        transcripts.mapNotNull { it.userId }.distinct().forEach { userId ->
+            syncUser(userId, forceSync = false)
         }
         return message
     }

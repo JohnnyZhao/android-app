@@ -112,11 +112,14 @@ open class SendMessageJob(
 
     private fun recallMessage(conversationId: String) {
         recallMessageId ?: return
-        messageMentionDao.deleteMessage(recallMessageId)
-        messageFts4Dao.deleteByMessageId(recallMessageId)
         messageDao.findMessageById(recallMessageId)?.let { msg ->
             RxBus.publish(RecallEvent(msg.id))
             messageDao.recallFailedMessage(msg.id)
+            messageDao.recallMessage(msg.id)
+            messageDao.recallPinMessage(msg.id, msg.conversationId)
+            pinMessageDao.deleteByMessageId(msg.id)
+            messageMentionDao.deleteMessage(msg.id)
+            remoteMessageStatusDao.deleteByMessageId(recallMessageId)
             remoteMessageStatusDao.updateConversationUnseen(msg.conversationId)
             msg.mediaUrl?.getFilePath()?.let {
                 File(it).let { file ->
@@ -125,6 +128,7 @@ open class SendMessageJob(
                     }
                 }
             }
+
             messageDao.findMessageItemById(message.conversationId, msg.id)?.let { quoteMsg ->
                 messageDao.updateQuoteContentByQuoteId(
                     message.conversationId,
@@ -133,12 +137,9 @@ open class SendMessageJob(
                 )
             }
             jobManager.cancelJobByMixinJobId(msg.id)
-            messageDao.recallPinMessage(recallMessageId, msg.conversationId)
         }
-        pinMessageDao.deleteByMessageId(recallMessageId)
-        messageDao.recallMessage(recallMessageId)
-        remoteMessageStatusDao.deleteByMessageId(recallMessageId)
         InvalidateFlow.emit(conversationId)
+        messageFts4Dao.deleteByMessageId(recallMessageId)
     }
 
     override fun onCancel(cancelReason: Int, throwable: Throwable?) {

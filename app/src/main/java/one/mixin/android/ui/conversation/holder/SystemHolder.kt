@@ -120,14 +120,24 @@ class SystemHolder constructor(val binding: ItemChatSystemBinding) : BaseViewHol
                     messageItem.userFullName
                 }
                 binding.chatInfo.text =
-                    if (timeInterval == null || timeInterval <= 0) {
-                        String.format(
-                            getText(R.string.chat_expired_disabled), name
-                        )
-                    } else {
-                        String.format(
-                            getText(R.string.chat_expired_set), name, toTimeInterval(timeInterval)
-                        )
+                    when {
+                        timeInterval == null -> { // Messages received in the old version
+                            String.format(
+                                getText(R.string.chat_expired_changed), name
+                            )
+                        }
+                        timeInterval <= 0 -> {
+                            String.format(
+                                getText(R.string.chat_expired_disabled), name
+                            )
+                        }
+                        else -> {
+                            String.format(
+                                getText(R.string.chat_expired_set),
+                                name,
+                                toTimeInterval(timeInterval)
+                            )
+                        }
                     }
             }
             else -> {

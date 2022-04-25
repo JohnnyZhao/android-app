@@ -35,7 +35,7 @@ fun toTimeIntervalIndex(interval: Long): Pair<Int, Int> = when {
 
 fun Long?.getTimeInterval(): String {
     return when {
-        this == null -> "off"
+        this == null || this <= 0L -> "off"
         else -> toTimeInterval(this)
     }
 }

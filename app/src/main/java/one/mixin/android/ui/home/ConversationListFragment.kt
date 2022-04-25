@@ -896,16 +896,24 @@ class ConversationListFragment : LinkFragment() {
                                 conversationItem.senderFullName
                             }
                             binding.msgTv.text =
-                                if (timeInterval == null || timeInterval <= 0) {
-                                    String.format(
-                                        getText(R.string.chat_expired_disabled), name
-                                    )
-                                } else {
-                                    String.format(
-                                        getText(R.string.chat_expired_set),
-                                        name,
-                                        toTimeInterval(timeInterval)
-                                    )
+                                when {
+                                    timeInterval == null -> {
+                                        String.format(
+                                            getText(R.string.chat_expired_changed), name
+                                        )
+                                    }
+                                    timeInterval <= 0 -> {
+                                        String.format(
+                                            getText(R.string.chat_expired_disabled), name
+                                        )
+                                    }
+                                    else -> {
+                                        String.format(
+                                            getText(R.string.chat_expired_set),
+                                            name,
+                                            toTimeInterval(timeInterval)
+                                        )
+                                    }
                                 }
                         }
                         else -> {

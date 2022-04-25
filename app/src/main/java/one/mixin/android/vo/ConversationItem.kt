@@ -4,6 +4,7 @@ import android.view.View
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.DiffUtil
 import androidx.room.Entity
+import one.mixin.android.websocket.SystemConversationAction
 import org.threeten.bp.Instant
 
 @Entity
@@ -81,7 +82,7 @@ data class ConversationItem(
         return false
     }
 
-    fun isExpire() = expireIn != null
+    fun isExpire() = actionName == SystemConversationAction.EXPIRE.name
 
     fun isBot(): Boolean {
         return category == ConversationCategory.CONTACT.name && appId != null

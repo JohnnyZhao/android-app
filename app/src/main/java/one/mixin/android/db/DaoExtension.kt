@@ -200,16 +200,6 @@ suspend fun MixinDatabase.deleteMessageByConversationId(conversationId: String, 
     InvalidateFlow.emit(conversationId)
 }
 
-fun MixinDatabase.deleteMessage(messageId: String) {
-    runInTransaction {
-        pinMessageDao().deleteByMessageId(messageId)
-        mentionMessageDao().deleteMessage(messageId)
-        messageDao().deleteMessageById(messageId)
-        messageFts4Dao().deleteByMessageId(messageId)
-        remoteMessageStatusDao().deleteByMessageId(messageId)
-    }
-}
-
 // Insert message SQL
 fun MixinDatabase.insertAndNotifyConversation(message: Message) {
     runInTransaction {
